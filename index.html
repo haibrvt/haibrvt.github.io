@@ -249,7 +249,7 @@
             border-radius: 8px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
             transition: background-color 0.3s;
-            scroll-margin-top: 20px;
+            scroll-margin-top: 160px;
         }
         .group-summary-header h2 { font-size: 18px; color: #007bff; margin-bottom: 15px; border-bottom: 2px solid #f0f2f5; padding-bottom: 5px; }
         
@@ -383,13 +383,6 @@
             .controls { flex-direction: column; align-items: stretch; }
             .controls > div { margin-left: 0 !important; margin-top: 10px; text-align: left; }
         }
-        @media (min-width: 1200px) {
-            .container { 
-                margin-left: 250px !important; 
-                max-width: calc(95% - 250px) !important;
-                transition: margin-left 0.3s ease;
-            }
-        }
 
         #scrollToTopBtn {
             position: fixed; bottom: 40px; right: 40px; z-index: 999; 
@@ -419,7 +412,7 @@
             width: var(--sidebar-collapsed-width); max-height: 80vh;
             overflow: hidden; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        @media (max-width: 1199px) {
+        @media (max-width: 899px) {
             .group-nav {
                 left: 40px; bottom: 40px; top: auto; transform: none;
                 width: 50px; height: 50px; border-radius: 50%; padding: 0;
@@ -472,9 +465,9 @@
             font-size: 10px; flex-shrink: 0; line-height: 1; display: flex;
             align-items: center; justify-content: center; min-width: 15px;
         }
-        @media (min-width: 1200px) {
-            .container { margin-left: 100px !important; max-width: calc(95% - 100px) !important; transition: margin-left 0.3s ease; }
-            .container.with-sidebar-expanded { margin-left: 280px !important; max-width: calc(95% - 280px) !important; }
+        @media (min-width: 900px) {
+            .container { margin-left: 95px !important; max-width: calc(96% - 95px) !important; transition: margin-left 0.3s ease, max-width 0.3s ease; }
+            .container.with-sidebar-expanded { margin-left: 250px !important; max-width: calc(96% - 250px) !important; }
         }
         .dark-text-mode .group-nav { background: rgba(30, 30, 30, 0.95) !important; border-color: #444; }
         .dark-text-mode .group-nav-item { color: #eee !important; background: rgba(255,255,255,0.05); }
@@ -1406,9 +1399,14 @@
                         e.preventDefault();
                         const targetElement = document.getElementById(groupId);
                         if (targetElement) {
-                            targetElement.scrollIntoView({
-                                behavior: 'smooth', 
-                                block: 'start'      
+                            const stickyHeader = document.getElementById('sticky-header-wrapper');
+                            const headerOffset = (stickyHeader ? stickyHeader.offsetHeight : 140) + 15;
+                            const elementPosition = targetElement.getBoundingClientRect().top;
+                            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                            window.scrollTo({
+                                top: Math.max(0, offsetPosition),
+                                behavior: 'smooth'
                             });
                         }
                     });
@@ -1642,7 +1640,7 @@
 
             if (sidebarToggle) {
                 sidebarToggle.addEventListener('click', () => {
-                    if (window.innerWidth < 1200) {
+                    if (window.innerWidth < 900) {
                         sidebar.classList.toggle('mobile-active');
                     } else {
                         sidebar.classList.toggle('expanded');
@@ -1654,7 +1652,7 @@
             const navItemsContainer = document.getElementById('nav-items-container');
             if (navItemsContainer) {
                 navItemsContainer.addEventListener('click', (e) => {
-                    if (window.innerWidth < 1200 && e.target.closest('.group-nav-item')) {
+                    if (window.innerWidth < 900 && e.target.closest('.group-nav-item')) {
                         sidebar.classList.remove('mobile-active');
                     }
                 });
