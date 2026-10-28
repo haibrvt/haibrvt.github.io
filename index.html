@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>MT5 Dashboard</title>
+    <div id="starfield-bg" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: #000; overflow: hidden;">
+        <canvas id="starfield-canvas"></canvas>
+    </div>
+    <style>
+        /* --- KHAI BÁO BIẾN CSS BAN ĐẦU --- */
+        :root {
+            --base-opacity-level: 1.0; 
+            --text-color: #333; 
+            --text-secondary-color: #666; 
+        }
+
+        /* CSS CHUNG */
+        body { 
+            font-family: Arial, sans-serif; 
+            color: var(--text-color);
+            margin: 0; 
+            padding: 20px; 
+            background-color: transparent !important;
+            transition: color 0.3s; 
+        }
+        .container { max-width: 95%; margin: auto; }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            background-color: rgba(255, 255, 255, calc(var(--base-opacity-level) * 1.0)); 
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+        .header h1 { color: #007bff; margin-bottom: 5px; }
+        
+        /* Điều khiển */
+        .controls { 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start; 
+            margin-bottom: 20px; 
+            gap: 10px; 
+            background-color: rgba(255, 255, 255, calc(var(--base-opacity-level) * 0.9)); 
+            padding: 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .controls select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; max-width: 300px; }
+        
+        /* Loading Spinner */
+        .loading { border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite; margin: 20px auto; }
+        .hidden { display: none !important; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Card Tổng quan */
+        .card-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 25px; 
+        }
+        .card { 
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            min-height: 120px; 
+            background-color: rgba(255, 255, 255, calc(var(--base-opacity-level) * 0.9)); 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); 
+            text-align: center; 
+            transition: background-color 0.3s;
+        }
+        .card h2 { font-size: 14px; color: var(--text-secondary-color); margin-bottom: 10px; text-transform: uppercase; }
+        .card p { 
+            font-size: 20px; 
+            font-weight: bold; 
+            margin: 0; 
+            word-wrap: break-word; 
+            overflow-wrap: break-word;
+            line-height: 1.2;
+        }
+        
+        /* Màu trạng thái chung */
+        .card.info { border-bottom: 3px solid #007bff; }
+        .card.success { border-bottom: 3px solid #28a745; }
+        .card.danger { border-bottom: 3px solid #dc3545; } 
+        
+        /* Bảng */
+        .group-summary { 
+            margin-bottom: 30px; 
+            padding: 15px; 
+            background-color: rgba(255, 255, 255, calc(var(--base-opacity-level) * 0.9)); 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            transition: background-color 0.3s;
+            scroll-margin-top: 20px;
+        }
+        .group-summary-header h2 { font-size: 18px; color: #007bff; margin-bottom: 15px; border-bottom: 2px solid #f0f2f5; padding-bottom: 5px; }
+        
+        .table-responsive { overflow-x: auto; margin-top: 20px; }
+        .group-table { width: 100%; border-collapse: collapse; min-width: 900px; } 
+        .group-table th, .group-table td { border: 1px solid #eee; padding: 12px 15px; text-align: left; font-size: 14px; transition: background-color 0.3s; }
+        .group-table th { 
+            background-color: rgba(255, 255, 255, calc(var(--base-opacity-level) * 0.95)); 
+            font-weight: bold; 
+            color: var(--text-color); 
+            text-transform: uppercase; 
+        }
+        .group-table tr:nth-child(even) { 
+            background-color: rgba(255, 255, 255, calc(var(--base-opacity-level) * 0.85)); 
+        } 
+        .group-table td { white-space: nowrap; }
+        
+        /* Chỉ số thay đổi */
+        .change-indicator { 
+            display: block; 
+            font-size: 11px; 
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+        .up-arrow { color: #28a745; }
+        .down-arrow { color: #dc3545; }
+        .arrow { font-size: 16px; margin-right: 2px; }
+
+        .positive-profit { color: #28a745; font-weight: bold; }
+        .negative-profit { color: #dc3545; font-weight: bold; }
+
+        /* TRẠNG THÁI CHUNG */
+        .status-online { 
+            color: #28a745; 
+            font-weight: bold; 
+            background-color: #e6ffed; 
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .status-offline { 
+            color: #dc3545; 
+            font-weight: bold; 
+            background-color: #ffe6e6; 
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        /* --- MÀU CHỈ SỐ EQUITY --- */
+        .eq-high { color: #28a745 !important; font-weight: bold; }
+        .eq-low { color: #dc3545 !important; font-weight: bold; }
+        .eq-medium { color: #d39e00 !important; font-weight: bold; }
+
+        /* --- CẢNH BÁO MỚI: LOW EQUITY WARNING --- */
+        .low-equity-warning {
+            color: #dc3545 !important; 
+            font-weight: bold !important;
+            background-color: rgba(255, 234, 234, calc(var(--base-opacity-level) * 0.9)); 
+        }
+        .low-equity-warning td { 
+            color: #dc3545 !important; 
+            font-weight: bold !important; 
+        }
+
+        /* --- CHẾ ĐỘ NỀN TỐI --- */
+        .dark-text-mode {
+            --text-color: #f0f0f0; 
+            --text-secondary-color: #dddddd; 
+        }
+        
+        .dark-text-mode .header h1,
+        .dark-text-mode .group-summary-header h2 { 
+            color: #ffffff; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); 
+        }
+        .dark-text-mode .card p {
+            text-shadow: 0 0 5px rgba(0,0,0,0.4);
+        }
+        
+        .dark-text-mode .positive-profit { color: #7aff96 !important; }
+        .dark-text-mode .negative-profit { color: #ff9191 !important; }
+        .dark-text-mode .low-equity-warning,
+        .dark-text-mode .low-equity-warning td {
+             color: #ff9191 !important;
+             background-color: rgba(255, 234, 234, calc(var(--base-opacity-level) * 0.9)) !important; 
+        }
+
+        .dark-text-mode .up-arrow { color: #7aff96; }
+        .dark-text-mode .down-arrow { color: #ff9191; }
+
+        .dark-text-mode .status-online { background-color: rgba(40, 167, 69, 0.5); color: #ffffff; }
+        .dark-text-mode .status-offline { background-color: rgba(220, 53, 69, 0.5); color: #ffffff; }
+
+        /* Màu chỉ số Equity ban đêm */
+        .dark-text-mode .eq-high { color: #7aff96 !important; }
+        .dark-text-mode .eq-low { color: #ff9191 !important; }
+        .dark-text-mode .eq-medium { color: #ffc107 !important; }
+        
+        .dark-text-mode .market-closed-popup { background-color: rgba(0, 0, 0, 0.85); }
+        .dark-text-mode .popup-content { background-color: #fff; }
+        .dark-text-mode .popup-content h3,
+        .dark-text-mode .popup-content p { color: #333; text-shadow: none; }
+
+        /* --- POP-UP --- */
+        .market-closed-popup {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); display: flex;
+            justify-content: center; align-items: center; z-index: 1000; 
+        }
+        .popup-content {
+            background-color: #fff; padding: 30px; border-radius: 8px;
+            text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 400px; transform: scale(1); animation: fadeIn 0.3s ease-out;
+        }
+        .popup-content h3 { color: #dc3545; font-size: 20px; margin-bottom: 15px; }
+        .popup-content p { margin-bottom: 20px; line-height: 1.5; }
+        .popup-content button {
+            background-color: #007bff; color: white; border: none;
+            padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        /* Media Query */
+        @media (max-width: 600px) {
+            .card-container { grid-template-columns: repeat(2, 1fr); }
+            .card p { font-size: 18px; }
+            .group-summary { padding: 10px; }
+            .group-table th, .group-table td { padding: 8px 10px; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .controls > div { margin-left: 0 !important; margin-top: 10px; text-align: left; }
+        }
+        @media (min-width: 1200px) {
+            .container { 
+                margin-left: 250px !important; 
+                max-width: calc(95% - 250px) !important;
+                transition: margin-left 0.3s ease;
+            }
+        }
+
+        #scrollToTopBtn {
+            position: fixed; bottom: 40px; right: 40px; z-index: 999; 
+            border: none; outline: none; background-color: #007bff; 
+            color: white; cursor: pointer; width: 50px; height: 50px;
+            border-radius: 50%; font-size: 24px; line-height: 50px; 
+            text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); 
+            transition: opacity 0.3s, background-color 0.3s, transform 0.2s;
+        }
+        #scrollToTopBtn:hover { background-color: #0056b3; transform: scale(1.05); }
+        #scrollToTopBtn.hidden {
+            opacity: 0; visibility: hidden; transform: scale(0.8);
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+        }
+        
+        .header, .controls, .card, .group-summary {
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+        }
+        
+        /* --- SIDEBAR --- */
+        :root { --sidebar-width: 220px; --sidebar-collapsed-width: 75px; }
+        .group-nav {
+            position: fixed; left: 0px; top: 50%; transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(10px);
+            border: 1px solid #ddd; padding: 8px 5px; border-radius: 12px;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.1); z-index: 1001;
+            width: var(--sidebar-collapsed-width); max-height: 80vh;
+            overflow: hidden; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @media (max-width: 1199px) {
+            .group-nav {
+                left: 40px; bottom: 40px; top: auto; transform: none;
+                width: 50px; height: 50px; border-radius: 50%; padding: 0;
+                display: flex; flex-direction: column; align-items: center;
+                justify-content: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                background: #007bff !important; 
+            }
+            .group-nav #sidebar-toggle { color: white !important; margin-bottom: 0; padding: 0; font-size: 20px; }
+            .group-nav.mobile-active {
+                width: 260px; height: auto; max-height: 70vh; border-radius: 15px;
+                bottom: 100px; left: 20px; background: rgba(255, 255, 255, 0.98) !important;
+                align-items: stretch; justify-content: flex-start; padding: 15px 10px;
+            }
+            .group-nav.mobile-active #sidebar-toggle { color: #007bff !important; text-align: right; }
+            .group-nav h4, .group-nav .nav-text { display: none; }
+            .group-nav.mobile-active h4, .group-nav.mobile-active .nav-text { display: block; }
+            .group-nav.mobile-active #nav-items-container { display: block; }
+            #nav-items-container { display: none; width: 100%; }
+        }
+        .group-nav.expanded { width: var(--sidebar-width); }
+        #sidebar-toggle {
+            background: none; border: none; font-size: 24px; cursor: pointer;
+            color: #007bff; padding: 5px 10px; display: block; margin-bottom: 10px;
+            text-align: center; width: 100%;
+        }
+        .group-nav h4 {
+            margin: 5px 0 10px 8px; font-size: 10px; letter-spacing: 1px;
+            color: #007bff; text-transform: uppercase; white-space: nowrap; display: none; 
+        }
+        .group-nav.expanded h4 { display: block; }
+        #nav-items-container { overflow-y: auto; max-height: calc(80vh - 50px); padding-right: 2px; }
+        .group-nav-item {
+            color: #333 !important; font-weight: 500; margin-bottom: 6px; 
+            padding: 6px 10px; background: rgba(0,0,0,0.03); border-radius: 8px;
+            display: flex; align-items: center; justify-content: flex-start; 
+            text-decoration: none; transition: all 0.2s; min-height: 32px; gap: 10px; 
+        }
+        .nav-avatar {
+            width: 28px; height: 28px; min-width: 28px; font-size: 13px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; 
+            background-color: #007bff; color: white; border-radius: 6px; flex-shrink: 0; line-height: 1; 
+        }
+        .nav-text {
+            flex-grow: 1; font-size: 13px; white-space: nowrap; overflow: hidden;
+            text-overflow: ellipsis; display: none; line-height: 1.2; 
+        }
+        .group-nav.expanded .nav-text { display: block; }
+        .nav-badge {
+            background: #e9ecef; color: #495057; padding: 2px 6px; border-radius: 4px;
+            font-size: 10px; flex-shrink: 0; line-height: 1; display: flex;
+            align-items: center; justify-content: center; min-width: 15px;
+        }
+        @media (min-width: 1200px) {
+            .container { margin-left: 100px !important; max-width: calc(95% - 100px) !important; transition: margin-left 0.3s ease; }
+            .container.with-sidebar-expanded { margin-left: 280px !important; max-width: calc(95% - 280px) !important; }
+        }
+        .dark-text-mode .group-nav { background: rgba(30, 30, 30, 0.95) !important; border-color: #444; }
+        .dark-text-mode .group-nav-item { color: #eee !important; background: rgba(255,255,255,0.05); }
+        .dark-text-mode .nav-badge { background: #444; color: #ccc; }
+    </style>
+</head>
+<body>
+    <div id="group-navigation" class="group-nav hidden">
+        <button id="sidebar-toggle" title="Mở rộng/Thu gọn">☰</button>
+        <h4>Danh sách Tài khoản</h4>
+        <div id="nav-items-container"></div>
+    </div>
+    <div id="market-closed-popup" class="market-closed-popup hidden">
+        <div class="popup-content">
+            <h3>🔴 THỊ TRƯỜNG ĐÃ ĐÓNG CỬA 🔴</h3>
+            <p>Hiện tại là ngoài giờ giao dịch Forex (Từ **5:00 sáng T7** đến **5:00 sáng T2**, giờ VN).</p>
+            <p>Các chỉ số trên Dashboard sẽ không thay đổi. Vui lòng kiểm tra lại sau 5:00 sáng Thứ Hai.</p>
+            <button onclick="dismissPopup()">Đã hiểu</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard BOT</h1>
+            <h3 id="exchange-rate-display">Đơn vị quy đổi: 1 USD = Đang tải... VND</h3>
+            <p id="last-updated">Đang tải cấu hình nhóm...</p>
+        </div>
+
+        <div class="controls">
+            <label for="group-selector">Chọn Tài khoản:</label>
+            <select id="group-selector">
+                <option value="all">Tất cả Tài khoản</option>
+            </select>
+            
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                <label for="opacity-slider" style="white-space: nowrap;">Độ đục:</label>
+                <input type="range" id="opacity-slider" min="0" max="100" value="100" step="5">
+                <span id="opacity-value">100%</span>
+            </div>
+        </div>
+        
+        <div id="loading-spinner" class="loading hidden"></div>
+        
+        <div id="total-summary-card" class="card-container hidden">
+            <div class="card info">
+                <h2>Tổng Tài khoản</h2>
+                <p id="total-accounts">0</p>
+                <!-- Thêm dòng này để hiện số TK đang hoạt động -->
+                <div id="active-accounts-indicator" style="font-size: 13px; color: #28a745; margin-top: 8px; font-weight: bold;"></div>
+            </div>
+            <div class="card info"><h2>Tổng Equity</h2><p id="total-equity">0</p></div>
+            <div class="card info"><h2>Tổng Balance</h2><p id="total-balance">0</p></div>
+            <div class="card danger"><h2>Tổng Lệnh Đang Mở</h2><p id="total-open-trades">0</p></div>
+        </div>
+
+        <div id="groups-container" class="hidden">
+        </div>
+
+    </div>
+
+    <button id="scrollToTopBtn" title="Về đầu trang" class="hidden">
+        &#x2191;
+    </button> 
+    
+    <script type="module">
+        const getFirstLetter = (name) => {
+            return name ? name.trim().charAt(0).toUpperCase() : '?';
+        };
+        (function() {
+            const canvas = document.getElementById('starfield-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height, stars = [];
+            const starCount = 400; 
+            const speed = 2; 
+
+            function init() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+                stars = [];
+                for (let i = 0; i < starCount; i++) {
+                    stars.push({
+                        x: Math.random() * width - width / 2,
+                        y: Math.random() * height - height / 2,
+                        z: Math.random() * width,
+                        size: Math.random() * 1.5
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.fillStyle = "black";
+                ctx.fillRect(0, 0, width, height);
+                
+                ctx.save();
+                ctx.translate(width / 2, height / 2);
+                
+                for (let i = 0; i < stars.length; i++) {
+                    let s = stars[i];
+                    s.z -= speed;
+
+                    if (s.z <= 0) {
+                        s.z = width;
+                        s.x = Math.random() * width - width / 2;
+                        s.y = Math.random() * height - height / 2;
+                    }
+
+                    const x = s.x * (width / s.z);
+                    const y = s.y * (width / s.z);
+                    const r = s.size * (width / s.z);
+
+                    ctx.beginPath();
+                    ctx.fillStyle = "white";
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', init);
+            init();
+            draw();
+        })();
+        
+        const SHEET1_NAME = "Du%20lieu%20MT"; 
+        const SHEET2_NAME = "Du%20lieu%20MT%205h"; 
+
+        const BASE_URL = "https://docs.google.com/spreadsheets/d/1UFGekOEyXNB0U4RDzf8uLhaa1iy8Tz2mtpEyiLtKVRc/gviz/tq?tqx=out:json&sheet="; 
+        
+        const DATA_SHEET_URL = BASE_URL + SHEET1_NAME; 
+        const COMPARISON_SHEET_URL = BASE_URL + SHEET2_NAME; 
+
+        const EXCHANGE_RATE_SHEET_NAME = "VNDUSD"; 
+        const EXCHANGE_RATE_API_URL = BASE_URL + EXCHANGE_RATE_SHEET_NAME + `&range=A1`; 
+        
+        const DEFAULT_GROUP_NAME = "Nhóm Khác";
+        const MAX_RETRIES = 3; 
+        const RETRY_DELAY_MS = 2000; 
+        
+        let ACCOUNT_GROUP_MAP = {}; 
+        let CURRENT_SNAPSHOT_DATA = null;
+        let LAST_SNAPSHOT_DATA = null;
+        let COMPARISON_DATA_LOADED = false; 
+        
+        const fetchSheetData = async (url) => {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Mã lỗi HTTP: ${response.status}`);
+            }
+            const text = await response.text();
+            
+            const jsonStart = text.indexOf('{');
+            const jsonEnd = text.lastIndexOf('}');
+            
+            if (jsonStart === -1 || jsonEnd === -1) {
+                throw new Error("Phản hồi không hợp lệ.");
+            }
+            
+            const jsonText = text.substring(jsonStart, jsonEnd + 1);
+            const data = JSON.parse(jsonText);
+            
+            if (data.status !== 'ok' || !data.table || !data.table.rows) {
+                throw new Error(`Lỗi trạng thái: ${data.errors ? data.errors[0].message : 'Không rõ'}`);
+            }
+            
+            const rawData = [];
+            const numCols = data.table.cols.length;
+
+            data.table.rows.forEach(row => {
+                const finalRow = [];
+                let hasValidLogin = false;
+                
+                for (let i = 0; i < numCols; i++) {
+                    const cell = row.c && row.c[i];
+                    let value = '';
+                    
+                    if (cell) {
+                        // Cập nhật lấy thời gian từ cột F (Index 5)
+                        if (i === 5 && cell.v !== undefined && String(cell.v).startsWith('Date(')) {
+                            value = String(cell.v);
+                        } else if (cell.v !== undefined) {
+                            value = String(cell.v);
+                        } else if (cell.f !== undefined) {
+                            value = String(cell.f);
+                        }
+                    }
+                    
+                    finalRow.push(value.trim());
+
+                    if (i === 0 && finalRow[0] !== '' && finalRow[0] !== 'Login') {
+                         hasValidLogin = true;
+                    }
+                }
+                
+                while (finalRow.length < 10) {
+                    finalRow.push('');
+                }
+                
+                if (hasValidLogin) {
+                     rawData.push(finalRow);
+                }
+            });
+            
+            return rawData;
+        };
+
+        const fetchWithRetries = async (url, purpose) => {
+            let rawData = null;
+            let success = false;
+
+            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    document.getElementById('last-updated').textContent = `Đang tải ${purpose}... (Thử lại ${attempt}/${MAX_RETRIES})`;
+                    rawData = await fetchSheetData(url);
+                    success = true;
+                    break; 
+                } catch (error) {
+                    console.error(`Lần thử ${attempt} thất bại khi tải ${purpose}: ${error.message}`);
+                    if (attempt < MAX_RETRIES) {
+                        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+                    } else {
+                        throw new Error(`Không thể tải ${purpose} sau ${MAX_RETRIES} lần thử.`);
+                    }
+                }
+            }
+            if (!success || rawData.length === 0) {
+                 if (purpose.includes('hiện tại')) {
+                    throw new Error(`Dữ liệu ${purpose} trống sau nhiều lần thử.`);
+                 }
+            }
+            return rawData;
+        }
+
+        const loadDataAndMap = async () => {
+            document.getElementById('last-updated').textContent = "Đang tải cấu hình nhóm và dữ liệu hiện tại...";
+            
+            let currentRawData = null;
+            let comparisonRawData = null;
+            COMPARISON_DATA_LOADED = false; 
+
+            fetchExchangeRate();
+
+            try {
+                currentRawData = await fetchWithRetries(DATA_SHEET_URL, 'dữ liệu hiện tại');
+                
+                try {
+                    comparisonRawData = await fetchWithRetries(COMPARISON_SHEET_URL, 'dữ liệu so sánh');
+                    
+                    if (comparisonRawData && comparisonRawData.length > 0) {
+                        COMPARISON_DATA_LOADED = true;
+                    } else {
+                        comparisonRawData = null; 
+                    }
+
+                } catch (e) {
+                    comparisonRawData = null; 
+                }
+                
+                const tempMap = {};
+                currentRawData.forEach(parts => {
+                    const accountId = parts[0]; 
+                    // Tên Nhóm chuyển sang Cột G (Index 6)
+                    const groupName = parts[6] !== undefined && parts[6] !== '' ? parts[6] : DEFAULT_GROUP_NAME; 
+                    
+                    if (accountId) {
+                        tempMap[accountId] = groupName.trim();
+                    }
+                });
+                ACCOUNT_GROUP_MAP = tempMap;
+                
+                const currentTimestamp = new Date().toISOString();
+                CURRENT_SNAPSHOT_DATA = processRawData(currentRawData, currentTimestamp, ACCOUNT_GROUP_MAP);
+
+                if (COMPARISON_DATA_LOADED) {
+                    LAST_SNAPSHOT_DATA = processRawData(comparisonRawData, "số liệu tuần trước", ACCOUNT_GROUP_MAP); 
+                } else {
+                    LAST_SNAPSHOT_DATA = CURRENT_SNAPSHOT_DATA; 
+                }
+                
+                LAST_SNAPSHOT_DATA.accountMap = {};
+                LAST_SNAPSHOT_DATA.groups.forEach(group => {
+                    group.accounts.forEach(account => {
+                        LAST_SNAPSHOT_DATA.accountMap[account.login] = account;
+                    });
+                });
+                
+                await updateDashboardAndSelector(CURRENT_SNAPSHOT_DATA, LAST_SNAPSHOT_DATA);
+                
+                checkMarketClosed(); 
+
+            } catch (error) {
+                console.error('Lỗi nghiêm trọng khi tải dữ liệu:', error);
+                document.getElementById('last-updated').textContent = `Lỗi nghiêm trọng: ${error.message}`;
+                hideAllDataSections();
+            }
+        };
+
+        const fetchRateFromSheet = async (url) => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Mã lỗi HTTP: ${response.status}`);
+            const text = await response.text();
+            
+            const jsonStart = text.indexOf('{');
+            const jsonEnd = text.lastIndexOf('}');
+            if (jsonStart === -1 || jsonEnd === -1) throw new Error("Phản hồi không hợp lệ.");
+            
+            const jsonText = text.substring(jsonStart, jsonEnd + 1);
+            const data = JSON.parse(jsonText);
+            
+            if (data.status !== 'ok' || !data.table || !data.table.rows || data.table.rows.length === 0) {
+                throw new Error(`Không tìm thấy dữ liệu tỷ giá.`);
+            }
+            
+            const cell = data.table.rows[0].c[0];
+            
+            let rateValue = null;
+            if (cell && cell.v !== undefined) {
+                rateValue = parseFloat(cell.v); 
+            } else if (cell && cell.f !== undefined) {
+                 rateValue = parseFloat(String(cell.f).replace(/[^\d.]/g, ''));
+            }
+            
+            if (rateValue !== null && !isNaN(rateValue)) return rateValue;
+
+            throw new Error("Không thể trích xuất tỷ giá từ ô A1.");
+        };
+
+        const fetchExchangeRate = async () => {
+            const displayElement = document.getElementById('exchange-rate-display');
+
+            try {
+                const rate = await fetchRateFromSheet(EXCHANGE_RATE_API_URL);
+                
+                if (rate > 1000) { 
+                    const formattedRate = rate.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); 
+                    displayElement.textContent = `Đơn vị quy đổi: 1 USD = ${formattedRate} VND`;
+                } else {
+                    throw new Error("Tỷ giá không hợp lệ.");
+                }
+
+            } catch (error) {
+                displayElement.textContent = `Đơn vị quy đổi: 1 USD = Lỗi tải VND`;
+            }
+        };
+
+        const processRawData = (csvData, timestamp, accountGroupMap) => {
+            let totalEquity = 0;
+            let totalBalance = 0;
+            let totalOpenTrades = 0;
+            let totalActiveAccounts = 0; // Thêm biến đếm TK đang hoạt động tổng
+
+            const groupData = {};
+            const INACTIVE_GROUP_NAME = "không hoạt động";
+            const INACTIVE_THRESHOLD = 3;
+
+            csvData.forEach(parts => {
+                const accountId = parts[0]; 
+                const name = parts[1];      
+                let balance = parseFloat(parts[2]) || 0; 
+                let equity = parseFloat(parts[3]) || 0;  
+                
+                // --- CẬP NHẬT INDEX MỚI ---
+                const open_trades_count = parseInt(parts[4]) || 0; // Cột E (Index 4)
+                const last_update_time = parts[5] || ''; // Cột F (Index 5)
+                
+                const unit = parts[7] ? parts[7].trim().toUpperCase() : ''; // Cột H (Index 7)
+                const factor = (unit === 'USC') ? 100 : 1;
+
+                let max_drawdown = parseFloat(parts[9]) || 0; // Cột J (Index 9)
+
+                if (factor !== 1) {
+                    equity = equity / factor;
+                    balance = balance / factor;
+                    max_drawdown = max_drawdown / factor;
+                }
+                
+                if (!accountId) return; 
+
+                let groupName = accountGroupMap[accountId] || DEFAULT_GROUP_NAME;
+                
+                // Lọc nhóm dựa trên Equity
+                if (equity < INACTIVE_THRESHOLD) {
+                    groupName = INACTIVE_GROUP_NAME;
+                } else {
+                    totalActiveAccounts++; // Cộng vào tổng số TK đang hoạt động của toàn hệ thống
+                }
+                
+                totalEquity += equity;
+                totalBalance += balance;
+                totalOpenTrades += open_trades_count;
+                
+                if (!groupData[groupName]) {
+                    groupData[groupName] = {
+                        group_name: groupName,
+                        account_count: 0,
+                        active_account_count: 0, // Bộ đếm số TK hoạt động cho từng nhóm
+                        total_equity: 0,
+                        total_balance: 0,
+                        total_open_trades: 0,
+                        accounts: []
+                    };
+                }
+                
+                groupData[groupName].account_count++;
+                
+                if (equity >= INACTIVE_THRESHOLD) {
+                    groupData[groupName].active_account_count++;
+                }
+
+                groupData[groupName].total_equity += equity;
+                groupData[groupName].total_balance += balance;
+                groupData[groupName].total_open_trades += open_trades_count;
+                
+                groupData[groupName].accounts.push({
+                    login: accountId,
+                    name: name,
+                    equity: equity,
+                    balance: balance,
+                    max_drawdown: max_drawdown,
+                    open_trades_count: open_trades_count,
+                    last_update_time: last_update_time 
+                });
+            });
+            
+            const groups = Object.values(groupData).sort((a, b) => {
+                if (a.group_name === INACTIVE_GROUP_NAME) return 1;
+                if (b.group_name === INACTIVE_GROUP_NAME) return -1;
+                return a.group_name.localeCompare(b.group_name, 'vi', { sensitivity: 'base' });
+            });
+
+            return {
+                timestamp: timestamp,
+                total_accounts: groups.reduce((sum, g) => sum + g.account_count, 0),
+                total_active_accounts: totalActiveAccounts, 
+                total_equity: totalEquity,
+                total_balance: totalBalance,
+                total_open_trades: totalOpenTrades,
+                groups: groups 
+            };
+        };
+
+        const fetchData = async () => {
+            fetchExchangeRate();
+
+            if (!CURRENT_SNAPSHOT_DATA) {
+                await loadDataAndMap(); 
+                return;
+            }
+            await updateDashboardAndSelector(CURRENT_SNAPSHOT_DATA, LAST_SNAPSHOT_DATA);
+            checkMarketClosed(); 
+        };
+        
+        const updateDashboardAndSelector = async (currentData, lastData) => {
+            const groupSelector = document.getElementById('group-selector');
+            const selectedGroup = groupSelector.value;
+            
+            showLoadingState();
+
+            updateGroupSelector(currentData.groups); 
+
+            let displayCurrentData = currentData;
+            let displayLastData = lastData;
+
+            if (selectedGroup !== 'all' && currentData.groups) {
+                const filteredGroups = currentData.groups.filter(g => g.group_name === selectedGroup);
+                const groupTotalSummary = calculateGroupTotalSummary(filteredGroups);
+
+                displayCurrentData = {
+                    ...currentData, 
+                    ...groupTotalSummary, 
+                    groups: filteredGroups 
+                };
+                
+                if (lastData.groups) {
+                    const filteredLastGroups = lastData.groups.filter(g => g.group_name === selectedGroup);
+                    const lastGroupTotalSummary = calculateGroupTotalSummary(filteredLastGroups);
+                    
+                    displayLastData = {
+                        ...lastData,
+                        ...lastGroupTotalSummary,
+                        groups: filteredLastGroups 
+                    };
+                }
+            }
+            
+            updateDashboard(displayCurrentData, displayLastData, selectedGroup);
+            hideLoadingState();
+        };
+        
+        const calculateGroupTotalSummary = (groups) => {
+             let total_accounts = 0;
+             let total_active_accounts = 0; 
+             let total_equity = 0;
+             let total_balance = 0;
+             let total_open_trades = 0;
+
+             groups.forEach(group => {
+                 total_accounts += group.account_count;
+                 // Nếu không phải nhóm "không hoạt động" thì tính vào số HĐ
+                 if (group.group_name !== "không hoạt động") {
+                     total_active_accounts += group.account_count; 
+                 }
+                 total_equity += group.total_equity;
+                 total_balance += group.total_balance;
+                 total_open_trades += group.total_open_trades;
+             });
+
+             return {
+                 total_accounts, total_active_accounts, total_equity, total_balance, total_open_trades
+             };
+        }
+
+        const parseSheetDateTime = (datetimeStr) => {
+            if (!datetimeStr) return null;
+            datetimeStr = datetimeStr.trim();
+
+            if (datetimeStr.startsWith('Date(') && datetimeStr.endsWith(')')) {
+                const parts = datetimeStr.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
+                if (parts && parts.length === 7) {
+                    try {
+                        const year = parseInt(parts[1], 10);
+                        const month = parseInt(parts[2], 10); 
+                        const day = parseInt(parts[3], 10);
+                        const hour = parseInt(parts[4], 10);
+                        const minute = parseInt(parts[5], 10);
+                        const second = parseInt(parts[6], 10);
+                        
+                        const date = new Date(year, month, day, hour, minute, second);
+                        
+                        if (!isNaN(date.getTime()) && date.getFullYear() === year) {
+                            return date;
+                        }
+                    } catch (e) {}
+                }
+            }
+            
+            let parts = datetimeStr.match(/(\d{4})-(\d{1,2})-(\d{1,2})\s(\d{1,2}):(\d{1,2}):(\d{1,2})/);
+            if (parts) {
+                 try {
+                    const year = parseInt(parts[1], 10);
+                    const month = parseInt(parts[2], 10) - 1; 
+                    const day = parseInt(parts[3], 10);
+                    const hour = parseInt(parts[4], 10);
+                    const minute = parseInt(parts[5], 10);
+                    const second = parseInt(parts[6], 10);
+                    
+                    const date = new Date(year, month, day, hour, minute, second);
+                    if (!isNaN(date.getTime())) {
+                        return date;
+                    }
+                } catch (e) {}
+            }
+
+            parts = datetimeStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s(\d{1,2}):(\d{1,2}):(\d{1,2})/);
+            if (parts) {
+                try {
+                    const day = parseInt(parts[1], 10);
+                    const month = parseInt(parts[2], 10) - 1; 
+                    const year = parseInt(parts[3], 10);
+                    const hour = parseInt(parts[4], 10);
+                    const minute = parseInt(parts[5], 10);
+                    const second = parseInt(parts[6], 10);
+                    
+                    const date = new Date(year, month, day, hour, minute, second);
+                    if (!isNaN(date.getTime())) {
+                        return date;
+                    }
+                } catch (e) {}
+            }
+
+            const fallbackDate = new Date(datetimeStr);
+            if (!isNaN(fallbackDate.getTime())) {
+                 return fallbackDate;
+            }
+
+            return null;
+        }
+
+        const getAccountStatus = (lastUpdateTimeStr) => {
+            const now = new Date();
+            let lastUpdate = parseSheetDateTime(lastUpdateTimeStr); 
+
+            if (!lastUpdate || isNaN(lastUpdate.getTime())) {
+                return `<span class="status-offline">N/A</span>`; 
+            }
+
+            const diffMs = now.getTime() - lastUpdate.getTime();
+            const thirtyMinutes = 30 * 60 * 1000; 
+
+            if (diffMs <= thirtyMinutes && diffMs >= 0) {
+                return `<span class="status-online">Online</span>`;
+            } else {
+                const diffInMinutes = Math.floor(diffMs / 60000);
+                let message;
+                if (diffInMinutes < 0) {
+                    message = 'Lỗi thời gian';
+                } else if (diffInMinutes < 60) {
+                    message = `Offline (${diffInMinutes}m trước)`;
+                } else if (diffInMinutes < 60 * 24) {
+                    message = `Offline (${Math.floor(diffInMinutes / 60)}h trước)`;
+                } else {
+                    message = `Offline (${Math.floor(diffInMinutes / (60 * 24))} ngày trước)`;
+                }
+
+                return `<span class="status-offline">${message}</span>`;
+            }
+        };
+
+        const checkMarketClosed = () => {
+            const now = new Date();
+            const day = now.getDay(); 
+            const hour = now.getHours();
+            
+            let isClosed = false;
+
+            if (day === 6) { 
+                if (hour >= 5) { 
+                    isClosed = true;
+                }
+            } else if (day === 0) { 
+                isClosed = true; 
+            } else if (day === 1) { 
+                if (hour < 5) { 
+                    isClosed = true;
+                }
+            }
+            
+            const popup = document.getElementById('market-closed-popup');
+
+            if (isClosed) {
+                if (sessionStorage.getItem('popupDismissed') !== 'true') {
+                    popup.classList.remove('hidden');
+                } else {
+                     popup.classList.add('hidden');
+                }
+                
+                let lastUpdatedText = document.getElementById('last-updated').innerHTML;
+                if (!lastUpdatedText.includes('(Thị trường đóng cửa)')) {
+                    document.getElementById('last-updated').innerHTML += '<span style="color:#dc3545; font-weight:bold;"> (Thị trường đóng cửa)</span>';
+                }
+                
+            } else {
+                popup.classList.add('hidden');
+                sessionStorage.removeItem('popupDismissed');
+            }
+            
+            return isClosed;
+        };
+
+        window.dismissPopup = () => {
+            document.getElementById('market-closed-popup').classList.add('hidden');
+            sessionStorage.setItem('popupDismissed', 'true'); 
+        };
+
+        const getChangeIndicator = (currentValue, lastValue, formatOptions, showPercent = true) => {
+            const currentNum = typeof currentValue === 'number' ? currentValue : 0;
+            const lastNum = typeof lastValue === 'number' ? lastValue : null;
+
+            const isCurrency = formatOptions && formatOptions.minimumFractionDigits >= 1;
+            const currencyUnit = isCurrency ? ' USD' : ''; 
+            
+            if (lastNum === null || isNaN(lastNum)) {
+                return `<span>${currentNum.toLocaleString('vi-VN', formatOptions)}${currencyUnit}</span>`;
+            }
+            
+            const diff = currentNum - lastNum;
+            const formattedValue = currentNum.toLocaleString('vi-VN', formatOptions); 
+            const displayValue = `${formattedValue}${currencyUnit}`;
+
+            const minDiffThreshold = isCurrency ? 0.01 : 1; 
+
+            if (Math.abs(diff) < minDiffThreshold) {
+                return `<span>${displayValue}</span>`;
+            }
+            
+            let percentHTML = '';
+            if (showPercent && lastNum !== 0) {
+                const percentChange = (diff / Math.abs(lastNum)) * 100;
+                percentHTML = ` (${percentChange > 0 ? '+' : ''}${percentChange.toLocaleString('vi-VN', {maximumFractionDigits: 1})}%)`;
+            }
+
+            const formattedDiff = Math.abs(diff).toLocaleString('vi-VN', { 
+                minimumFractionDigits: formatOptions.minimumFractionDigits, 
+                maximumFractionDigits: formatOptions.maximumFractionDigits !== undefined ? formatOptions.maximumFractionDigits : formatOptions.minimumFractionDigits, 
+                signDisplay: 'never' 
+            });
+            
+            let arrowHTML = '';
+            const diffUnit = isCurrency ? ' USD' : '';
+
+            if (diff > 0) {
+                arrowHTML = `<br><span class="change-indicator up-arrow"><span class="arrow">↗</span>(+${formattedDiff}${diffUnit}${percentHTML})</span>`;
+            } else if (diff < 0) {
+                arrowHTML = `<br><span class="change-indicator down-arrow"><span class="arrow">↘</span>(-${formattedDiff}${diffUnit}${percentHTML})</span>`;
+            }
+            
+            return `<span>${displayValue} ${arrowHTML}</span>`;
+        };
+
+        const showLoadingState = () => {
+            document.getElementById('loading-spinner').classList.remove('hidden');
+            document.getElementById('total-summary-card').classList.add('hidden');
+            document.getElementById('groups-container').classList.add('hidden');
+        };
+        
+        const hideLoadingState = () => {
+            document.getElementById('loading-spinner').classList.add('hidden');
+            document.getElementById('total-summary-card').classList.remove('hidden');
+            document.getElementById('groups-container').classList.remove('hidden');
+        };
+
+        const showAllDataSections = () => {
+            document.getElementById('total-summary-card').style.display = 'grid';
+            document.getElementById('groups-container').style.display = 'block';
+        };
+
+        const hideAllDataSections = () => {
+            document.getElementById('total-summary-card').style.display = 'none';
+            document.getElementById('groups-container').style.display = 'none';
+        };
+        
+        const updateSummaryDisplay = (summaryData, lastData) => {
+            const currencyFormat = { minimumFractionDigits: 2, maximumFractionDigits: 2 }; 
+            const integerFormat = { minimumFractionDigits: 0 };
+            
+            const lastTotalAccounts = lastData.total_accounts || null;
+            const lastTotalEquity = lastData.total_equity || null; 
+            const lastTotalBalance = lastData.total_balance || null;
+            const lastTotalOpenTrades = lastData.total_open_trades || null; 
+
+            document.getElementById('total-accounts').innerHTML = getChangeIndicator(summaryData.total_accounts, lastTotalAccounts, integerFormat);
+            
+            // Cập nhật để hiển thị thêm số dư tài khoản đang hoạt động
+            const activeAccountsElement = document.getElementById('active-accounts-indicator');
+            if (activeAccountsElement && summaryData.total_active_accounts !== undefined) {
+                activeAccountsElement.innerHTML = `Đang hoạt động: <span style="font-size: 15px;">${summaryData.total_active_accounts}</span>`;
+            }
+
+            document.getElementById('total-equity').innerHTML = getChangeIndicator(summaryData.total_equity, lastTotalEquity, currencyFormat);
+            document.getElementById('total-balance').innerHTML = getChangeIndicator(summaryData.total_balance, lastTotalBalance, currencyFormat);
+            document.getElementById('total-open-trades').innerHTML = getChangeIndicator(summaryData.total_open_trades, lastTotalOpenTrades, integerFormat, false);
+        };
+
+        const updateDashboard = (currentData, lastData, selectedGroup) => {
+            const lastUpdatedDate = new Date().toLocaleString('vi-VN'); 
+            
+            let comparisonDisplay = 'số liệu tuần trước';
+            if (!COMPARISON_DATA_LOADED) {
+                comparisonDisplay = '<span style="color: #dc3545;">⚠️ Lỗi tải Sheet2</span>';
+            }
+            
+            document.getElementById('last-updated').innerHTML = `Cập nhật Real-time: ${lastUpdatedDate} (So sánh với ${comparisonDisplay})`;
+            
+            const groupsContainer = document.getElementById('groups-container');
+            const navContainer = document.getElementById('nav-items-container'); 
+            const navSidebar = document.getElementById('group-navigation');
+            
+            groupsContainer.innerHTML = '';
+            navContainer.innerHTML = ''; 
+            
+            const currencyFormat = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+            const integerFormat = { minimumFractionDigits: 0 };
+            
+            updateSummaryDisplay(currentData, lastData);
+            
+            if (currentData.groups && currentData.groups.length > 0) {
+                navSidebar.classList.remove('hidden'); 
+
+                currentData.groups.forEach((group, index) => {
+                    const groupId = `group-section-${index}`;
+                    const lastGroupData = lastData.groups ? lastData.groups.find(g => g.group_name === group.group_name) : null;
+
+                    const navItem = document.createElement('a');
+                    navItem.className = 'group-nav-item';
+                    navItem.style.cursor = 'pointer';
+                    navItem.title = group.group_name; 
+
+                    const firstLetter = getFirstLetter(group.group_name);
+
+                    // Xử lý logic lấy màu hiển thị cho Equity theo điều kiện mới
+                    let eqClass = 'eq-medium'; 
+                    let avgEq = group.active_account_count > 0 ? (group.total_equity / group.active_account_count) : 0;
+                    
+                    if (group.total_equity > (group.total_balance * 1.5)) {
+                        eqClass = 'eq-high'; // Xanh lá nếu Equity > Balance * 1.5
+                    } else if (avgEq < 10) {
+                        eqClass = 'eq-low'; // Đỏ nếu trung bình tài khoản < 10
+                    }
+
+                    // Cập nhật giao diện menu thanh bên trái hiển thị thêm Equity của mỗi nhóm
+                    navItem.innerHTML = `
+                        <div class="nav-avatar">${firstLetter}</div>
+                        <div class="nav-text">
+                            <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${group.group_name}</div>
+                            <div class="${eqClass}" style="font-size: 11px; margin-top: 3px;">Equity: $${group.total_equity.toLocaleString('vi-VN', currencyFormat)}</div>
+                        </div>
+                        <b class="nav-badge" title="Số lượng tài khoản">${group.account_count}</b>
+                    `;
+
+                    navItem.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const targetElement = document.getElementById(groupId);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({
+                                behavior: 'smooth', 
+                                block: 'start'      
+                            });
+                        }
+                    });
+                    navContainer.appendChild(navItem);
+
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'group-summary';
+                    groupDiv.id = groupId; 
+                    
+                    const groupHeader = document.createElement('div');
+                    groupHeader.className = 'group-summary-header';
+                    groupHeader.innerHTML = `<h2>Tài khoản: ${group.group_name}</h2>`;
+                    groupDiv.appendChild(groupHeader);
+
+                    if (group.group_name !== "không hoạt động") {
+                        const groupSummaryCard = document.createElement('div');
+                        groupSummaryCard.className = 'card-container';
+                        groupSummaryCard.innerHTML = `
+                            <div class="card info"><h2>Số tài khoản</h2><p>${getChangeIndicator(group.account_count, lastGroupData ? lastGroupData.account_count : null, integerFormat, false)}</p></div>
+                            <div class="card info"><h2>Tổng Equity</h2><p>${getChangeIndicator(group.total_equity, lastGroupData ? lastGroupData.total_equity : null, currencyFormat)}</p></div>
+                            <div class="card info"><h2>Tổng Balance</h2><p>${getChangeIndicator(group.total_balance, lastGroupData ? lastGroupData.total_balance : null, currencyFormat)}</p></div>
+                            <div class="card danger"><h2>Tổng Lệnh Đang Mở</h2><p>${getChangeIndicator(group.total_open_trades, lastGroupData ? lastGroupData.total_open_trades : null, integerFormat, false)}</p></div>`;
+                        groupDiv.appendChild(groupSummaryCard);
+                    }
+
+                    const tableContainer = document.createElement('div');
+                    tableContainer.className = 'table-responsive';
+                    
+                    const table = document.createElement('table');
+                    table.className = 'group-table';
+                    table.innerHTML = `<thead><tr><th>Login</th><th>Tên</th><th>Equity</th><th>Balance</th><th>Lãi/Lỗ thả nổi</th><th>Số lệnh</th><th>Trạng thái</th></tr></thead>
+                                       <tbody>${group.accounts.map(account => {
+                                           const lastAccount = lastData.accountMap ? lastData.accountMap[account.login] : null;
+                                           const statusHTML = getAccountStatus(account.last_update_time);
+                                           const diff = account.equity - account.balance;
+                                           const isLowEquity = account.equity < 10;
+                                           return `<tr class="${isLowEquity ? 'low-equity-warning' : ''}">
+                                                <td>${account.login}</td><td>${account.name}</td>
+                                                <td>${getChangeIndicator(account.equity, lastAccount?.equity, currencyFormat)}</td>
+                                                <td>${getChangeIndicator(account.balance, lastAccount?.balance, currencyFormat)}</td>
+                                                <td class="${diff < 0 ? 'negative-profit' : 'positive-profit'}">
+                                                    ${diff.toLocaleString('vi-VN', currencyFormat)} USD
+                                                    <div style="font-size: 10px; color: var(--text-secondary-color); font-weight: normal; margin-top: 5px; line-height: 1.2;">
+                                                        <span style="color: #dc3545;">↓ Max DD: ${account.max_drawdown.toLocaleString('vi-VN', currencyFormat)}</span>
+                                                    </div>
+                                                </td>
+                                                <td>${getChangeIndicator(account.open_trades_count, lastAccount?.open_trades_count, integerFormat, false)}</td>
+                                                <td>${statusHTML}</td>
+                                           </tr>`;
+                                       }).join('')}</tbody>`;
+                    tableContainer.appendChild(table);
+                    groupDiv.appendChild(tableContainer);
+                    groupsContainer.appendChild(groupDiv);
+                });
+        
+                showAllDataSections();
+
+            } else if (selectedGroup !== 'all') {
+                document.getElementById('last-updated').textContent = `Không tìm thấy dữ liệu tài khoản cho nhóm '${selectedGroup}'.`;
+                
+                updateSummaryDisplay(
+                    { total_accounts: 0, total_equity: 0, total_balance: 0, total_open_trades: 0 }, 
+                    { total_accounts: 0, total_equity: 0, total_balance: 0, total_open_trades: 0 }
+                );
+                hideAllDataSections();
+            } else {
+                document.getElementById('last-updated').textContent = 'Không có dữ liệu để hiển thị.';
+                hideAllDataSections();
+            }
+        };
+        
+        const updateGroupSelector = (groups) => {
+            const groupSelector = document.getElementById('group-selector');
+            const selectedValue = groupSelector.value;
+            
+            const existingOptions = Array.from(groupSelector.options);
+            for (let i = existingOptions.length - 1; i >= 1; i--) { 
+                groupSelector.remove(i);
+            }
+            
+            if (groups) {
+                const uniqueGroups = new Set(groups.map(g => g.group_name));
+                const sortedGroupNames = Array.from(uniqueGroups).sort((a, b) => a.localeCompare(b));
+
+                sortedGroupNames.forEach(groupName => {
+                    const option = document.createElement('option');
+                    option.value = groupName;
+                    option.textContent = groupName;
+                    groupSelector.appendChild(option);
+                });
+            }
+            
+            if (selectedValue && groupSelector.querySelector(`option[value="${selectedValue}"]`)) {
+                 groupSelector.value = selectedValue;
+            } else {
+                 groupSelector.value = 'all';
+            }
+        };
+        
+        const OPACITY_STORAGE_KEY = 'dashboardOpacity';
+        const DEFAULT_OPACITY_PERCENT = 100;
+
+        const updateTransparencyMode = (opacityPercent) => {
+            const opacityLevel = opacityPercent / 100; 
+            const body = document.body;
+
+            body.style.setProperty('--base-opacity-level', opacityLevel.toFixed(2));
+            
+            if (opacityLevel < 0.6) {
+                body.classList.add('dark-text-mode');
+            } else {
+                body.classList.remove('dark-text-mode');
+            }
+            
+            document.getElementById('opacity-value').textContent = `${opacityPercent}%`;
+        };
+
+        const setupTransparencySlider = () => {
+            const slider = document.getElementById('opacity-slider');
+            
+            const savedState = localStorage.getItem(OPACITY_STORAGE_KEY);
+            const initialOpacity = savedState ? parseInt(savedState) : DEFAULT_OPACITY_PERCENT; 
+
+            slider.value = initialOpacity;
+            updateTransparencyMode(initialOpacity);
+
+            slider.addEventListener('input', (event) => {
+                const newOpacityPercent = parseInt(event.target.value);
+                localStorage.setItem(OPACITY_STORAGE_KEY, newOpacityPercent);
+                updateTransparencyMode(newOpacityPercent);
+            });
+        };
+        
+        const scrollToTop = () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth' 
+            });
+        };
+
+        const toggleScrollButton = () => {
+            const btn = document.getElementById('scrollToTopBtn');
+            if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const groupSelector = document.getElementById('group-selector');
+            groupSelector.addEventListener('change', fetchData);
+
+            setupTransparencySlider();
+
+            const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+            if (scrollToTopBtn) {
+                scrollToTopBtn.addEventListener('click', scrollToTop);
+                window.addEventListener('scroll', toggleScrollButton);
+            }
+
+            loadDataAndMap();
+
+            setInterval(fetchExchangeRate, 30000); 
+            
+            const sidebar = document.getElementById('group-navigation');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const mainContainer = document.querySelector('.container');
+
+            sidebarToggle.addEventListener('click', () => {
+                if (window.innerWidth < 1200) {
+                    sidebar.classList.toggle('mobile-active');
+                } else {
+                    sidebar.classList.toggle('expanded');
+                    mainContainer.classList.toggle('with-sidebar-expanded');
+                }
+            });
+
+            document.getElementById('nav-items-container').addEventListener('click', (e) => {
+                if (window.innerWidth < 1200 && e.target.closest('.group-nav-item')) {
+                    sidebar.classList.remove('mobile-active');
+                }
+            });
+
+        });
+        
+        setInterval(loadDataAndMap, 30000); 
+    </script>
+</body>
+</html>
