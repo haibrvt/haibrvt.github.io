@@ -34,21 +34,28 @@
         }
         .header h1 { color: #007bff; margin-bottom: 5px; }
         
+        /* Khung Cố định tổng hợp (Sticky Header) */
+        .sticky-header-wrapper {
+            position: sticky;
+            top: 6px;
+            z-index: 990;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         /* Điều khiển */
         .controls { 
-            position: sticky;
-            top: 10px;
-            z-index: 990;
             display: flex; 
             align-items: center; 
             justify-content: flex-start; 
-            margin-bottom: 20px; 
+            margin-bottom: 15px; 
             gap: 12px; 
             background-color: rgba(255, 255, 255, calc(var(--base-opacity-level) * 0.95)); 
             padding: 10px 15px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            transition: background-color 0.3s, box-shadow 0.3s;
+            transition: all 0.25s;
             flex-wrap: wrap;
         }
         .controls select { 
@@ -126,6 +133,73 @@
             font-size: 12px;
             color: var(--text-secondary-color);
             min-width: 35px;
+        }
+
+        /* --- THU GỌN VÀ ĐỔI MÀU NỀN TÁCH BIỆT KHI CUỘN XUỐNG --- */
+        .sticky-header-wrapper.is-scrolled {
+            background-color: rgba(240, 244, 250, calc(var(--base-opacity-level) * 0.98)) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 8px 12px;
+            border-radius: 12px;
+            border-bottom: 3px solid #007bff;
+            border-left: 1px solid rgba(0, 123, 255, 0.2);
+            border-right: 1px solid rgba(0, 123, 255, 0.2);
+            border-top: 1px solid rgba(0, 123, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .sticky-header-wrapper.is-scrolled .controls {
+            margin-bottom: 8px;
+            padding: 4px 0;
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            gap: 10px;
+        }
+        .sticky-header-wrapper.is-scrolled .controls select,
+        .sticky-header-wrapper.is-scrolled .search-box input {
+            padding: 5px 24px 5px 8px;
+            font-size: 13px;
+        }
+        .sticky-header-wrapper.is-scrolled .btn-refresh {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        /* Thu gọn 4 thẻ tổng quan khi cuộn */
+        .sticky-header-wrapper.is-scrolled #total-summary-card {
+            gap: 8px;
+            margin-bottom: 0;
+        }
+        .sticky-header-wrapper.is-scrolled .card {
+            min-height: auto;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background-color: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 123, 255, 0.15);
+        }
+        .sticky-header-wrapper.is-scrolled .card h2 {
+            font-size: 11px;
+            margin-bottom: 2px;
+            letter-spacing: 0.5px;
+        }
+        .sticky-header-wrapper.is-scrolled .card p {
+            font-size: 15px;
+            line-height: 1.15;
+        }
+        .sticky-header-wrapper.is-scrolled #active-accounts-indicator {
+            font-size: 11px !important;
+            margin-top: 3px !important;
+        }
+        .sticky-header-wrapper.is-scrolled .change-indicator {
+            font-size: 10px;
+            margin-top: 2px;
+            line-height: 1.15;
+        }
+        .sticky-header-wrapper.is-scrolled .arrow {
+            font-size: 12px;
         }
         
         /* Loading Spinner */
@@ -409,6 +483,19 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .dark-text-mode .sticky-header-wrapper.is-scrolled {
+            background-color: rgba(20, 25, 35, calc(var(--base-opacity-level) * 0.98)) !important;
+            border-bottom: 3px solid #007bff;
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+        }
+        .dark-text-mode .sticky-header-wrapper.is-scrolled .card {
+            background-color: rgba(30, 36, 48, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
         .dark-text-mode .controls select,
         .dark-text-mode .search-box input {
             background-color: rgba(30, 30, 30, 0.85);
@@ -447,45 +534,47 @@
             <p id="last-updated">Đang tải cấu hình nhóm...</p>
         </div>
 
-        <div class="controls">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <label for="group-selector">Tài khoản:</label>
-                <select id="group-selector">
-                    <option value="all">Tất cả Tài khoản</option>
-                </select>
-            </div>
+        <div id="sticky-header-wrapper" class="sticky-header-wrapper">
+            <div class="controls">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label for="group-selector">Tài khoản:</label>
+                    <select id="group-selector">
+                        <option value="all">Tất cả Tài khoản</option>
+                    </select>
+                </div>
 
-            <div class="search-box">
-                <input type="text" id="search-input" placeholder="🔍 Tìm Login / Tên..." autocomplete="off">
-                <button id="clear-search-btn" class="clear-search-btn hidden" title="Xóa tìm kiếm">✕</button>
-            </div>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="🔍 Tìm Login / Tên..." autocomplete="off">
+                    <button id="clear-search-btn" class="clear-search-btn hidden" title="Xóa tìm kiếm">✕</button>
+                </div>
 
-            <div class="refresh-group">
-                <button id="refresh-btn" class="btn-refresh" title="Cập nhật dữ liệu ngay">
-                    <span class="refresh-icon">🔄</span> Làm mới
-                </button>
-                <span id="countdown-timer" class="refresh-countdown" title="Tự động làm mới sau">(30s)</span>
+                <div class="refresh-group">
+                    <button id="refresh-btn" class="btn-refresh" title="Cập nhật dữ liệu ngay">
+                        <span class="refresh-icon">🔄</span> Làm mới
+                    </button>
+                    <span id="countdown-timer" class="refresh-countdown" title="Tự động làm mới sau">(30s)</span>
+                </div>
+                
+                <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                    <label for="opacity-slider" style="white-space: nowrap;">Độ đục:</label>
+                    <input type="range" id="opacity-slider" min="0" max="100" value="100" step="5">
+                    <span id="opacity-value">100%</span>
+                </div>
             </div>
             
-            <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
-                <label for="opacity-slider" style="white-space: nowrap;">Độ đục:</label>
-                <input type="range" id="opacity-slider" min="0" max="100" value="100" step="5">
-                <span id="opacity-value">100%</span>
+            <div id="loading-spinner" class="loading hidden"></div>
+            
+            <div id="total-summary-card" class="card-container hidden">
+                <div class="card info">
+                    <h2>Tổng Tài khoản</h2>
+                    <p id="total-accounts">0</p>
+                    <!-- Thêm dòng này để hiện số TK đang hoạt động -->
+                    <div id="active-accounts-indicator" style="font-size: 13px; color: #28a745; margin-top: 8px; font-weight: bold;"></div>
+                </div>
+                <div class="card info"><h2>Tổng Equity</h2><p id="total-equity">0</p></div>
+                <div class="card info"><h2>Tổng Balance</h2><p id="total-balance">0</p></div>
+                <div class="card danger"><h2>Tổng Lệnh Đang Mở</h2><p id="total-open-trades">0</p></div>
             </div>
-        </div>
-        
-        <div id="loading-spinner" class="loading hidden"></div>
-        
-        <div id="total-summary-card" class="card-container hidden">
-            <div class="card info">
-                <h2>Tổng Tài khoản</h2>
-                <p id="total-accounts">0</p>
-                <!-- Thêm dòng này để hiện số TK đang hoạt động -->
-                <div id="active-accounts-indicator" style="font-size: 13px; color: #28a745; margin-top: 8px; font-weight: bold;"></div>
-            </div>
-            <div class="card info"><h2>Tổng Equity</h2><p id="total-equity">0</p></div>
-            <div class="card info"><h2>Tổng Balance</h2><p id="total-balance">0</p></div>
-            <div class="card danger"><h2>Tổng Lệnh Đang Mở</h2><p id="total-open-trades">0</p></div>
         </div>
 
         <div id="groups-container" class="hidden">
@@ -1570,6 +1659,19 @@
                     }
                 });
             }
+
+            // Xử lý thu gọn khung Sticky khi cuộn xuống
+            const stickyWrapper = document.getElementById('sticky-header-wrapper');
+            const updateStickyOnScroll = () => {
+                if (!stickyWrapper) return;
+                if (window.scrollY > 80) {
+                    stickyWrapper.classList.add('is-scrolled');
+                } else {
+                    stickyWrapper.classList.remove('is-scrolled');
+                }
+            };
+            window.addEventListener('scroll', updateStickyOnScroll, { passive: true });
+            updateStickyOnScroll();
 
             // Bộ đếm ngược tự động làm mới mỗi giây
             setInterval(() => {
