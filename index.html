@@ -36,15 +36,19 @@
         
         /* Điều khiển */
         .controls { 
+            position: sticky;
+            top: 10px;
+            z-index: 990;
             display: flex; 
             align-items: center; 
             justify-content: flex-start; 
             margin-bottom: 20px; 
             gap: 12px; 
-            background-color: rgba(255, 255, 255, calc(var(--base-opacity-level) * 0.9)); 
+            background-color: rgba(255, 255, 255, calc(var(--base-opacity-level) * 0.95)); 
             padding: 10px 15px;
             border-radius: 8px;
-            transition: background-color 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: background-color 0.3s, box-shadow 0.3s;
             flex-wrap: wrap;
         }
         .controls select { 
@@ -401,6 +405,10 @@
         .dark-text-mode .group-nav { background: rgba(30, 30, 30, 0.95) !important; border-color: #444; }
         .dark-text-mode .group-nav-item { color: #eee !important; background: rgba(255,255,255,0.05); }
         .dark-text-mode .nav-badge { background: #444; color: #ccc; }
+        .dark-text-mode .controls {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
         .dark-text-mode .controls select,
         .dark-text-mode .search-box input {
             background-color: rgba(30, 30, 30, 0.85);
