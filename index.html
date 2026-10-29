@@ -374,14 +374,155 @@
             to { opacity: 1; transform: scale(1); }
         }
         
-        /* Media Query */
-        @media (max-width: 600px) {
-            .card-container { grid-template-columns: repeat(2, 1fr); }
-            .card p { font-size: 18px; }
-            .group-summary { padding: 10px; }
-            .group-table th, .group-table td { padding: 8px 10px; }
-            .controls { flex-direction: column; align-items: stretch; }
-            .controls > div { margin-left: 0 !important; margin-top: 10px; text-align: left; }
+        /* Utility classes */
+        .hide-desktop { display: none !important; }
+        .btn-toggle-stats {
+            background: rgba(0, 123, 255, 0.1);
+            color: #007bff;
+            border: 1px solid rgba(0, 123, 255, 0.25);
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-size: 13px;
+            cursor: pointer;
+            line-height: 1;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- TỐI ƯU GIAO DIỆN MOBILE (< 768px) --- */
+        @media (max-width: 768px) {
+            body { padding: 6px 5px !important; }
+            .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .header { padding: 8px !important; margin-bottom: 8px !important; border-radius: 6px !important; }
+            .header h1 { font-size: 17px !important; margin-bottom: 2px !important; }
+            .header h3 { font-size: 11px !important; margin: 3px 0 !important; }
+            .header p { font-size: 10px !important; margin: 2px 0 !important; }
+
+            .hide-mobile { display: none !important; }
+            .hide-desktop { display: inline-flex !important; }
+
+            /* Ẩn thanh độ đục trên mobile để không chiếm chỗ */
+            .opacity-control { display: none !important; }
+
+            /* Khung cố định khi cuộn */
+            .sticky-header-wrapper {
+                top: 2px !important;
+                margin-bottom: 8px !important;
+                border-radius: 8px !important;
+            }
+            .sticky-header-wrapper.is-scrolled {
+                padding: 5px 6px !important;
+                border-radius: 8px !important;
+            }
+
+            /* Thanh controls trên 1 dòng duy nhất, co giãn tự động */
+            .controls { 
+                flex-direction: row !important; 
+                flex-wrap: nowrap !important;
+                align-items: center !important; 
+                justify-content: space-between !important;
+                gap: 5px !important;
+                padding: 5px 6px !important;
+                margin-bottom: 4px !important;
+            }
+            .control-group-select {
+                flex-shrink: 1 !important;
+                min-width: 0 !important;
+            }
+            .controls select {
+                padding: 5px 4px !important;
+                font-size: 11px !important;
+                max-width: 100px !important;
+                width: 100% !important;
+            }
+            .search-box {
+                flex: 1 1 auto !important;
+                min-width: 55px !important;
+            }
+            .search-box input {
+                width: 100% !important;
+                min-width: 55px !important;
+                padding: 5px 18px 5px 5px !important;
+                font-size: 11px !important;
+            }
+            .search-box input:focus {
+                width: 100% !important;
+            }
+            .refresh-group {
+                gap: 3px !important;
+                flex-shrink: 0 !important;
+            }
+            .btn-refresh {
+                padding: 5px 6px !important;
+                font-size: 11px !important;
+            }
+            .refresh-countdown {
+                font-size: 10px !important;
+                min-width: 20px !important;
+            }
+
+            /* 4 Card tổng quan chuyển thành 1 hàng ngang 4 ô mini */
+            #total-summary-card {
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 4px !important;
+                margin-bottom: 0 !important;
+            }
+            #total-summary-card.stats-collapsed {
+                display: none !important;
+            }
+            .sticky-header-wrapper .card {
+                min-height: auto !important;
+                padding: 4px 2px !important;
+                border-radius: 4px !important;
+            }
+            .sticky-header-wrapper .card h2 {
+                font-size: 9px !important;
+                margin-bottom: 1px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                letter-spacing: 0 !important;
+            }
+            .sticky-header-wrapper .card p {
+                font-size: 11px !important;
+                line-height: 1.1 !important;
+            }
+            .sticky-header-wrapper #active-accounts-indicator {
+                font-size: 8px !important;
+                margin-top: 1px !important;
+            }
+            .sticky-header-wrapper .change-indicator {
+                font-size: 8px !important;
+                margin-top: 1px !important;
+                line-height: 1 !important;
+            }
+            .sticky-header-wrapper .arrow {
+                font-size: 9px !important;
+            }
+
+            /* Thu nhỏ các bảng dữ liệu bên dưới */
+            .group-summary { padding: 8px 6px !important; margin-bottom: 15px !important; }
+            .group-summary-header h2 { font-size: 14px !important; margin-bottom: 6px !important; }
+            .group-summary .card-container {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 5px !important;
+            }
+            .group-summary .card {
+                min-height: 60px !important;
+                padding: 6px 4px !important;
+            }
+            .group-summary .card p { font-size: 14px !important; }
+            .group-table th, .group-table td { padding: 6px 6px !important; font-size: 11px !important; }
+
+            /* Nút cuộn lên đầu trang thu nhỏ trên mobile */
+            #scrollToTopBtn {
+                bottom: 20px !important;
+                right: 20px !important;
+                width: 38px !important;
+                height: 38px !important;
+                font-size: 18px !important;
+                line-height: 38px !important;
+            }
         }
 
         #scrollToTopBtn {
@@ -529,8 +670,8 @@
 
         <div id="sticky-header-wrapper" class="sticky-header-wrapper">
             <div class="controls">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <label for="group-selector">Tài khoản:</label>
+                <div class="control-group-select" style="display: flex; align-items: center; gap: 6px;">
+                    <label for="group-selector" class="hide-mobile">Tài khoản:</label>
                     <select id="group-selector">
                         <option value="all">Tất cả Tài khoản</option>
                     </select>
@@ -543,16 +684,18 @@
 
                 <div class="refresh-group">
                     <button id="refresh-btn" class="btn-refresh" title="Cập nhật dữ liệu ngay">
-                        <span class="refresh-icon">🔄</span> Làm mới
+                        <span class="refresh-icon">🔄</span> <span class="hide-mobile">Làm mới</span>
                     </button>
                     <span id="countdown-timer" class="refresh-countdown" title="Tự động làm mới sau">(30s)</span>
                 </div>
                 
-                <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                <div class="opacity-control" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
                     <label for="opacity-slider" style="white-space: nowrap;">Độ đục:</label>
                     <input type="range" id="opacity-slider" min="0" max="100" value="100" step="5">
                     <span id="opacity-value">100%</span>
                 </div>
+
+                <button id="toggle-stats-btn" class="btn-toggle-stats hide-desktop" title="Ẩn/Hiện dòng thống kê">📊</button>
             </div>
             
             <div id="loading-spinner" class="loading hidden"></div>
@@ -1625,6 +1768,22 @@
             }
 
             setupTransparencySlider();
+
+            // Nút toggle ẩn/hiện dòng thống kê trên mobile
+            const toggleStatsBtn = document.getElementById('toggle-stats-btn');
+            const totalSummaryCard = document.getElementById('total-summary-card');
+            if (toggleStatsBtn && totalSummaryCard) {
+                toggleStatsBtn.addEventListener('click', () => {
+                    totalSummaryCard.classList.toggle('stats-collapsed');
+                    if (totalSummaryCard.classList.contains('stats-collapsed')) {
+                        toggleStatsBtn.style.opacity = '0.4';
+                        toggleStatsBtn.title = 'Hiện dòng thống kê';
+                    } else {
+                        toggleStatsBtn.style.opacity = '1';
+                        toggleStatsBtn.title = 'Ẩn dòng thống kê';
+                    }
+                });
+            }
 
             const scrollToTopBtn = document.getElementById('scrollToTopBtn');
             if (scrollToTopBtn) {
