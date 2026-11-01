@@ -1560,7 +1560,7 @@
             }
             if (CURRENT_CURRENCY === 'VND') {
                 const vndAmount = usdAmount * CURRENT_EXCHANGE_RATE;
-                return vndAmount.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫';
+                return '≈ ' + vndAmount.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫';
             }
             return usdAmount.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD';
         };
@@ -1704,7 +1704,7 @@
                         <div class="nav-avatar">${escapeHTML(firstLetter)}</div>
                         <div class="nav-text">
                             <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(group.group_name)}</div>
-                            <div class="${eqClass}" style="font-size: 11px; margin-top: 3px;">Equity: $${group.total_equity.toLocaleString('vi-VN', currencyFormat)}</div>
+                            <div class="${eqClass}" style="font-size: 11px; margin-top: 3px;">Equity: ${formatMoney(group.total_equity, true)}</div>
                         </div>
                         <b class="nav-badge" title="Số lượng tài khoản">${group.account_count}</b>
                     `;
