@@ -346,34 +346,7 @@
         .dark-text-mode .eq-high { color: #7aff96 !important; }
         .dark-text-mode .eq-low { color: #ff9191 !important; }
         .dark-text-mode .eq-medium { color: #ffc107 !important; }
-        
-        .dark-text-mode .market-closed-popup { background-color: rgba(0, 0, 0, 0.85); }
-        .dark-text-mode .popup-content { background-color: #fff; }
-        .dark-text-mode .popup-content h3,
-        .dark-text-mode .popup-content p { color: #333; text-shadow: none; }
 
-        /* --- POP-UP --- */
-        .market-closed-popup {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); display: flex;
-            justify-content: center; align-items: center; z-index: 1000; 
-        }
-        .popup-content {
-            background-color: #fff; padding: 30px; border-radius: 8px;
-            text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            max-width: 400px; transform: scale(1); animation: fadeIn 0.3s ease-out;
-        }
-        .popup-content h3 { color: #dc3545; font-size: 20px; margin-bottom: 15px; }
-        .popup-content p { margin-bottom: 20px; line-height: 1.5; }
-        .popup-content button {
-            background-color: #007bff; color: white; border: none;
-            padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
         /* Utility classes */
         .hide-desktop { display: none !important; }
         .btn-toggle-stats {
@@ -652,14 +625,6 @@
         <button id="sidebar-toggle" title="Mở rộng/Thu gọn">☰</button>
         <h4>Danh sách Tài khoản</h4>
         <div id="nav-items-container"></div>
-    </div>
-    <div id="market-closed-popup" class="market-closed-popup hidden">
-        <div class="popup-content">
-            <h3>🔴 THỊ TRƯỜNG ĐÃ ĐÓNG CỬA 🔴</h3>
-            <p>Hiện tại là ngoài giờ giao dịch Forex (Từ **5:00 sáng T7** đến **5:00 sáng T2**, giờ VN).</p>
-            <p>Các chỉ số trên Dashboard sẽ không thay đổi. Vui lòng kiểm tra lại sau 5:00 sáng Thứ Hai.</p>
-            <button onclick="dismissPopup()">Đã hiểu</button>
-        </div>
     </div>
     <div class="container">
         <div class="header">
@@ -1365,32 +1330,15 @@
                     isClosed = true;
                 }
             }
-            
-            const popup = document.getElementById('market-closed-popup');
 
             if (isClosed) {
-                if (sessionStorage.getItem('popupDismissed') !== 'true') {
-                    popup.classList.remove('hidden');
-                } else {
-                     popup.classList.add('hidden');
-                }
-                
                 let lastUpdatedText = document.getElementById('last-updated').innerHTML;
                 if (!lastUpdatedText.includes('(Thị trường đóng cửa)')) {
                     document.getElementById('last-updated').innerHTML += '<span style="color:#dc3545; font-weight:bold;"> (Thị trường đóng cửa)</span>';
                 }
-                
-            } else {
-                popup.classList.add('hidden');
-                sessionStorage.removeItem('popupDismissed');
             }
             
             return isClosed;
-        };
-
-        window.dismissPopup = () => {
-            document.getElementById('market-closed-popup').classList.add('hidden');
-            sessionStorage.setItem('popupDismissed', 'true'); 
         };
 
         const getChangeIndicator = (currentValue, lastValue, formatOptions, showPercent = true) => {
