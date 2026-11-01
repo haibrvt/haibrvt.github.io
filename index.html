@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MT5 Dashboard">
+    <link rel="apple-touch-icon" href="favicon.png">
     <title>MT5 Dashboard</title>
     <style>
         /* --- KHAI BÁO BIẾN CSS BAN ĐẦU --- */
@@ -434,10 +440,10 @@
                 min-width: 20px !important;
             }
 
-            /* 4 Card tổng quan chuyển thành 1 hàng ngang 4 ô mini */
+            /* Card tổng quan chuyển thành hàng ngang ô mini */
             #total-summary-card {
-                grid-template-columns: repeat(4, 1fr) !important;
-                gap: 4px !important;
+                grid-template-columns: repeat(5, 1fr) !important;
+                gap: 3px !important;
                 margin-bottom: 0 !important;
             }
             #total-summary-card.stats-collapsed {
@@ -612,8 +618,139 @@
         .dark-text-mode .search-box input::placeholder {
             color: #aaa;
         }
-        .dark-text-mode .clear-search-btn {
-            color: #bbb;
+        /* --- NÂNG CẤP MỚI: BỘ LỌC TRẠNG THÁI & TIỀN TỆ & CẢNH BÁO --- */
+        .filter-status-group {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            padding: 2px;
+            gap: 2px;
+        }
+        .filter-btn {
+            background: transparent;
+            border: none;
+            padding: 5px 8px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .filter-btn.active {
+            background: #007bff;
+            color: #fff !important;
+            box-shadow: 0 1px 3px rgba(0, 123, 255, 0.3);
+        }
+        .filter-btn:hover:not(.active) {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        .currency-switch {
+            display: inline-flex;
+            align-items: center;
+            background: #e9ecef;
+            border-radius: 20px;
+            padding: 2px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid #ced4da;
+            user-select: none;
+        }
+        .currency-option {
+            padding: 3px 8px;
+            border-radius: 16px;
+            color: #495057;
+            transition: all 0.2s;
+        }
+        .currency-option.active {
+            background: #28a745;
+            color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Tiêu đề bảng có thể click sắp xếp */
+        .group-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 18px;
+        }
+        .group-table th.sortable:hover {
+            background-color: rgba(0, 123, 255, 0.15) !important;
+            color: #007bff;
+        }
+        .group-table th.sortable::after {
+            content: ' ↕';
+            font-size: 10px;
+            opacity: 0.4;
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .group-table th.sortable.asc::after {
+            content: ' ↑';
+            opacity: 1;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .group-table th.sortable.desc::after {
+            content: ' ↓';
+            opacity: 1;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        /* Cảnh báo Max DD nguy hiểm (> 20% hoặc gồng lớn) */
+        .high-drawdown-alert {
+            animation: pulse-danger 2s infinite;
+            border-left: 4px solid #dc3545 !important;
+            background-color: rgba(220, 53, 69, 0.08) !important;
+        }
+        .badge-dd-warning {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-left: 4px;
+            vertical-align: middle;
+            animation: blink 1.2s infinite;
+        }
+        @keyframes pulse-danger {
+            0% { background-color: rgba(220, 53, 69, 0.05); }
+            50% { background-color: rgba(220, 53, 69, 0.16); }
+            100% { background-color: rgba(220, 53, 69, 0.05); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .dark-text-mode .filter-status-group {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .dark-text-mode .filter-btn {
+            color: #ddd;
+        }
+        .dark-text-mode .filter-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .dark-text-mode .currency-switch {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+        .dark-text-mode .currency-option {
+            color: #aaa;
+        }
+        .dark-text-mode .high-drawdown-alert {
+            background-color: rgba(220, 53, 69, 0.2) !important;
         }
     </style>
 </head>
@@ -647,6 +784,20 @@
                     <button id="clear-search-btn" class="clear-search-btn hidden" title="Xóa tìm kiếm">✕</button>
                 </div>
 
+                <!-- Bộ lọc trạng thái Online / Offline / DD cao -->
+                <div class="filter-status-group" title="Lọc theo trạng thái tài khoản">
+                    <button class="filter-btn active" data-filter="all">Tất cả</button>
+                    <button class="filter-btn" data-filter="online">Online</button>
+                    <button class="filter-btn" data-filter="offline">Offline</button>
+                    <button class="filter-btn" data-filter="drawdown" style="color:#dc3545;">Gồng lỗ</button>
+                </div>
+
+                <!-- Nút chuyển đổi tiền tệ USD <-> VND -->
+                <div id="currency-switch-btn" class="currency-switch" title="Chuyển đổi đơn vị tiền tệ">
+                    <span class="currency-option active" data-currency="USD">USD</span>
+                    <span class="currency-option" data-currency="VND">VND</span>
+                </div>
+
                 <div class="refresh-group">
                     <button id="refresh-btn" class="btn-refresh" title="Cập nhật dữ liệu ngay">
                         <span class="refresh-icon">🔄</span> <span class="hide-mobile">Làm mới</span>
@@ -675,6 +826,10 @@
                 <div class="card info"><h2>Tổng Equity</h2><p id="total-equity">0</p></div>
                 <div class="card info"><h2>Tổng Balance</h2><p id="total-balance">0</p></div>
                 <div class="card danger"><h2>Tổng Lệnh Đang Mở</h2><p id="total-open-trades">0</p></div>
+                <div class="card info" id="card-floating-pl" style="border-bottom: 3px solid #17a2b8;">
+                    <h2>Lãi/Lỗ Thả Nổi Tổng</h2>
+                    <p id="total-floating-pl">0</p>
+                </div>
             </div>
         </div>
 
@@ -792,6 +947,11 @@
         let CURRENT_SNAPSHOT_DATA = null;
         let LAST_SNAPSHOT_DATA = null;
         let COMPARISON_DATA_LOADED = false; 
+        let CURRENT_EXCHANGE_RATE = 25400; // Tỷ giá mặc định nếu chưa load xong
+        let CURRENT_CURRENCY = localStorage.getItem('dashboardCurrency') || 'USD';
+        let CURRENT_STATUS_FILTER = localStorage.getItem('dashboardStatusFilter') || 'all';
+        let TABLE_SORT_COLUMN = localStorage.getItem('dashboardSortCol') || null;
+        let TABLE_SORT_DIRECTION = localStorage.getItem('dashboardSortDir') || 'desc'; 
         
         const fetchSheetData = async (url) => {
             const response = await fetch(url);
@@ -983,6 +1143,7 @@
                 const rate = await fetchRateFromSheet(EXCHANGE_RATE_API_URL);
                 
                 if (rate > 1000) { 
+                    CURRENT_EXCHANGE_RATE = rate;
                     const formattedRate = rate.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); 
                     displayElement.textContent = `Đơn vị quy đổi: 1 USD = ${formattedRate} VND`;
                 } else {
@@ -1136,8 +1297,8 @@
                 }
             }
 
-            // Lọc nhanh theo từ khóa tìm kiếm (Login hoặc Tên)
-            if (SEARCH_KEYWORD && displayCurrentData && displayCurrentData.groups) {
+            // Lọc theo từ khóa tìm kiếm (Login hoặc Tên) & Trạng thái (Online/Offline/Drawdown)
+            if ((SEARCH_KEYWORD || CURRENT_STATUS_FILTER !== 'all') && displayCurrentData && displayCurrentData.groups) {
                 const searchFilteredGroups = [];
                 let filteredTotalAccounts = 0;
                 let filteredActiveAccounts = 0;
@@ -1146,10 +1307,24 @@
                 let filteredTotalOpenTrades = 0;
 
                 displayCurrentData.groups.forEach(group => {
-                    const matchedAccounts = group.accounts.filter(acc => 
-                        String(acc.login).toLowerCase().includes(SEARCH_KEYWORD) ||
-                        String(acc.name).toLowerCase().includes(SEARCH_KEYWORD)
-                    );
+                    const matchedAccounts = group.accounts.filter(acc => {
+                        // Khớp từ khóa tìm kiếm
+                        const matchText = !SEARCH_KEYWORD || 
+                            String(acc.login).toLowerCase().includes(SEARCH_KEYWORD) ||
+                            String(acc.name).toLowerCase().includes(SEARCH_KEYWORD);
+                        if (!matchText) return false;
+
+                        // Khớp bộ lọc trạng thái
+                        if (CURRENT_STATUS_FILTER === 'online') {
+                            return isAccountOnline(acc.last_update_time);
+                        } else if (CURRENT_STATUS_FILTER === 'offline') {
+                            return !isAccountOnline(acc.last_update_time);
+                        } else if (CURRENT_STATUS_FILTER === 'drawdown') {
+                            const ddPercent = acc.balance > 0 ? (acc.max_drawdown / acc.balance) * 100 : 0;
+                            return acc.max_drawdown > 150 || ddPercent > 20 || (acc.equity - acc.balance < -50);
+                        }
+                        return true;
+                    });
 
                     if (matchedAccounts.length > 0) {
                         let grpEq = 0, grpBal = 0, grpTrades = 0, grpActive = 0;
@@ -1282,6 +1457,43 @@
             return null;
         }
 
+        const isAccountOnline = (lastUpdateTimeStr) => {
+            let lastUpdate = parseSheetDateTime(lastUpdateTimeStr); 
+            if (!lastUpdate || isNaN(lastUpdate.getTime())) return false;
+            const diffMs = new Date().getTime() - lastUpdate.getTime();
+            return diffMs <= 30 * 60 * 1000 && diffMs >= 0;
+        };
+
+        const sortAccountsList = (accounts, col, dir) => {
+            if (!col) return accounts;
+            const sorted = [...accounts];
+            sorted.sort((a, b) => {
+                let vA, vB;
+                if (col === 'login') {
+                    vA = String(a.login);
+                    vB = String(b.login);
+                    return dir === 'asc' ? vA.localeCompare(vB) : vB.localeCompare(vA);
+                } else if (col === 'name') {
+                    vA = String(a.name);
+                    vB = String(b.name);
+                    return dir === 'asc' ? vA.localeCompare(vB, 'vi') : vB.localeCompare(vA, 'vi');
+                } else if (col === 'equity') {
+                    vA = a.equity; vB = b.equity;
+                } else if (col === 'balance') {
+                    vA = a.balance; vB = b.balance;
+                } else if (col === 'profit') {
+                    vA = a.equity - a.balance; vB = b.equity - b.balance;
+                } else if (col === 'trades') {
+                    vA = a.open_trades_count; vB = b.open_trades_count;
+                } else if (col === 'status') {
+                    vA = isAccountOnline(a.last_update_time) ? 1 : 0;
+                    vB = isAccountOnline(b.last_update_time) ? 1 : 0;
+                }
+                return dir === 'asc' ? (vA - vB) : (vB - vA);
+            });
+            return sorted;
+        };
+
         const getAccountStatus = (lastUpdateTimeStr) => {
             const now = new Date();
             let lastUpdate = parseSheetDateTime(lastUpdateTimeStr); 
@@ -1341,21 +1553,29 @@
             return isClosed;
         };
 
+        const formatMoney = (usdAmount, isCurrency = true) => {
+            if (typeof usdAmount !== 'number' || isNaN(usdAmount)) usdAmount = 0;
+            if (!isCurrency) {
+                return usdAmount.toLocaleString('vi-VN');
+            }
+            if (CURRENT_CURRENCY === 'VND') {
+                const vndAmount = usdAmount * CURRENT_EXCHANGE_RATE;
+                return vndAmount.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫';
+            }
+            return usdAmount.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD';
+        };
+
         const getChangeIndicator = (currentValue, lastValue, formatOptions, showPercent = true) => {
             const currentNum = typeof currentValue === 'number' ? currentValue : 0;
             const lastNum = typeof lastValue === 'number' ? lastValue : null;
-
             const isCurrency = formatOptions && formatOptions.minimumFractionDigits >= 1;
-            const currencyUnit = isCurrency ? ' USD' : ''; 
             
             if (lastNum === null || isNaN(lastNum)) {
-                return `<span>${currentNum.toLocaleString('vi-VN', formatOptions)}${currencyUnit}</span>`;
+                return `<span>${formatMoney(currentNum, isCurrency)}</span>`;
             }
             
             const diff = currentNum - lastNum;
-            const formattedValue = currentNum.toLocaleString('vi-VN', formatOptions); 
-            const displayValue = `${formattedValue}${currencyUnit}`;
-
+            const displayValue = formatMoney(currentNum, isCurrency);
             const minDiffThreshold = isCurrency ? 0.01 : 1; 
 
             if (Math.abs(diff) < minDiffThreshold) {
@@ -1368,19 +1588,13 @@
                 percentHTML = ` (${percentChange > 0 ? '+' : ''}${percentChange.toLocaleString('vi-VN', {maximumFractionDigits: 1})}%)`;
             }
 
-            const formattedDiff = Math.abs(diff).toLocaleString('vi-VN', { 
-                minimumFractionDigits: formatOptions.minimumFractionDigits, 
-                maximumFractionDigits: formatOptions.maximumFractionDigits !== undefined ? formatOptions.maximumFractionDigits : formatOptions.minimumFractionDigits, 
-                signDisplay: 'never' 
-            });
-            
+            const formattedDiff = formatMoney(Math.abs(diff), isCurrency);
             let arrowHTML = '';
-            const diffUnit = isCurrency ? ' USD' : '';
 
             if (diff > 0) {
-                arrowHTML = `<br><span class="change-indicator up-arrow"><span class="arrow">↗</span>(+${formattedDiff}${diffUnit}${percentHTML})</span>`;
+                arrowHTML = `<br><span class="change-indicator up-arrow"><span class="arrow">↗</span>(+${formattedDiff}${percentHTML})</span>`;
             } else if (diff < 0) {
-                arrowHTML = `<br><span class="change-indicator down-arrow"><span class="arrow">↘</span>(-${formattedDiff}${diffUnit}${percentHTML})</span>`;
+                arrowHTML = `<br><span class="change-indicator down-arrow"><span class="arrow">↘</span>(-${formattedDiff}${percentHTML})</span>`;
             }
             
             return `<span>${displayValue} ${arrowHTML}</span>`;
@@ -1428,6 +1642,15 @@
             document.getElementById('total-equity').innerHTML = getChangeIndicator(summaryData.total_equity, lastTotalEquity, currencyFormat);
             document.getElementById('total-balance').innerHTML = getChangeIndicator(summaryData.total_balance, lastTotalBalance, currencyFormat);
             document.getElementById('total-open-trades').innerHTML = getChangeIndicator(summaryData.total_open_trades, lastTotalOpenTrades, integerFormat, false);
+
+            // Cập nhật Lãi/Lỗ thả nổi tổng
+            const floatingPL = summaryData.total_equity - summaryData.total_balance;
+            const floatingPLElement = document.getElementById('total-floating-pl');
+            if (floatingPLElement) {
+                const isPos = floatingPL >= 0;
+                floatingPLElement.className = isPos ? 'positive-profit' : 'negative-profit';
+                floatingPLElement.innerHTML = `${isPos ? '+' : ''}${formatMoney(floatingPL, true)}`;
+            }
         };
 
         const updateDashboard = (currentData, lastData, selectedGroup) => {
@@ -1523,31 +1746,77 @@
                         groupDiv.appendChild(groupSummaryCard);
                     }
 
+                    // Sắp xếp danh sách tài khoản theo cột đang chọn
+                    const sortedAccounts = sortAccountsList(group.accounts, TABLE_SORT_COLUMN, TABLE_SORT_DIRECTION);
+
                     const tableContainer = document.createElement('div');
                     tableContainer.className = 'table-responsive';
                     
+                    const getSortClass = (colName) => {
+                        if (TABLE_SORT_COLUMN === colName) {
+                            return TABLE_SORT_DIRECTION === 'asc' ? 'sortable asc' : 'sortable desc';
+                        }
+                        return 'sortable';
+                    };
+
                     const table = document.createElement('table');
                     table.className = 'group-table';
-                    table.innerHTML = `<thead><tr><th>Login</th><th>Tên</th><th>Equity</th><th>Balance</th><th>Lãi/Lỗ thả nổi</th><th>Số lệnh</th><th>Trạng thái</th></tr></thead>
-                                       <tbody>${group.accounts.map(account => {
-                                           const lastAccount = lastData.accountMap ? lastData.accountMap[account.login] : null;
-                                           const statusHTML = getAccountStatus(account.last_update_time);
-                                           const diff = account.equity - account.balance;
-                                           const isLowEquity = account.equity < 10;
-                                           return `<tr class="${isLowEquity ? 'low-equity-warning' : ''}">
-                                                <td>${escapeHTML(account.login)}</td><td>${escapeHTML(account.name)}</td>
-                                                <td>${getChangeIndicator(account.equity, lastAccount?.equity, currencyFormat)}</td>
-                                                <td>${getChangeIndicator(account.balance, lastAccount?.balance, currencyFormat)}</td>
-                                                <td class="${diff < 0 ? 'negative-profit' : 'positive-profit'}">
-                                                    ${diff.toLocaleString('vi-VN', currencyFormat)} USD
-                                                    <div style="font-size: 10px; color: var(--text-secondary-color); font-weight: normal; margin-top: 5px; line-height: 1.2;">
-                                                        <span style="color: #dc3545;">↓ Max DD: ${account.max_drawdown.toLocaleString('vi-VN', currencyFormat)}</span>
-                                                    </div>
-                                                </td>
-                                                <td>${getChangeIndicator(account.open_trades_count, lastAccount?.open_trades_count, integerFormat, false)}</td>
-                                                <td>${statusHTML}</td>
-                                           </tr>`;
-                                       }).join('')}</tbody>`;
+                    table.innerHTML = `<thead>
+                        <tr>
+                            <th class="${getSortClass('login')}" data-sort="login">Login</th>
+                            <th class="${getSortClass('name')}" data-sort="name">Tên</th>
+                            <th class="${getSortClass('equity')}" data-sort="equity">Equity</th>
+                            <th class="${getSortClass('balance')}" data-sort="balance">Balance</th>
+                            <th class="${getSortClass('profit')}" data-sort="profit">Lãi/Lỗ thả nổi</th>
+                            <th class="${getSortClass('trades')}" data-sort="trades">Số lệnh</th>
+                            <th class="${getSortClass('status')}" data-sort="status">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>${sortedAccounts.map(account => {
+                        const lastAccount = lastData.accountMap ? lastData.accountMap[account.login] : null;
+                        const statusHTML = getAccountStatus(account.last_update_time);
+                        const diff = account.equity - account.balance;
+                        const isLowEquity = account.equity < 10;
+                        
+                        // Cảnh báo High Drawdown: Nếu DD > $200 hoặc DD > 25% Balance
+                        const ddPercent = account.balance > 0 ? (account.max_drawdown / account.balance) * 100 : 0;
+                        const isHighDD = account.max_drawdown > 200 || ddPercent > 25;
+                        const ddWarningBadge = isHighDD ? `<span class="badge-dd-warning">NGUY HIỂM</span>` : '';
+
+                        return `<tr class="${isLowEquity ? 'low-equity-warning' : ''} ${isHighDD ? 'high-drawdown-alert' : ''}">
+                            <td>${escapeHTML(account.login)}</td>
+                            <td>${escapeHTML(account.name)}</td>
+                            <td>${getChangeIndicator(account.equity, lastAccount?.equity, currencyFormat)}</td>
+                            <td>${getChangeIndicator(account.balance, lastAccount?.balance, currencyFormat)}</td>
+                            <td class="${diff < 0 ? 'negative-profit' : 'positive-profit'}">
+                                ${diff >= 0 ? '+' : ''}${formatMoney(diff, true)}
+                                <div style="font-size: 10px; color: var(--text-secondary-color); font-weight: normal; margin-top: 5px; line-height: 1.2;">
+                                    <span style="color: #dc3545; font-weight: bold;">↓ Max DD: ${formatMoney(account.max_drawdown, true)}</span>
+                                    ${ddWarningBadge}
+                                </div>
+                            </td>
+                            <td>${getChangeIndicator(account.open_trades_count, lastAccount?.open_trades_count, integerFormat, false)}</td>
+                            <td>${statusHTML}</td>
+                        </tr>`;
+                    }).join('')}</tbody>`;
+
+                    // Bắt sự kiện click vào Header bảng để sắp xếp cột
+                    table.querySelectorAll('th.sortable').forEach(th => {
+                        th.addEventListener('click', () => {
+                            const col = th.getAttribute('data-sort');
+                            if (TABLE_SORT_COLUMN === col) {
+                                TABLE_SORT_DIRECTION = TABLE_SORT_DIRECTION === 'asc' ? 'desc' : 'asc';
+                            } else {
+                                TABLE_SORT_COLUMN = col;
+                                TABLE_SORT_DIRECTION = 'desc';
+                            }
+                            localStorage.setItem('dashboardSortCol', TABLE_SORT_COLUMN);
+                            localStorage.setItem('dashboardSortDir', TABLE_SORT_DIRECTION);
+                            if (CURRENT_SNAPSHOT_DATA) {
+                                updateDashboardAndSelector(CURRENT_SNAPSHOT_DATA, LAST_SNAPSHOT_DATA);
+                            }
+                        });
+                    });
                     tableContainer.appendChild(table);
                     groupDiv.appendChild(tableContainer);
                     groupsContainer.appendChild(groupDiv);
@@ -1705,6 +1974,50 @@
                         updateDashboardAndSelector(CURRENT_SNAPSHOT_DATA, LAST_SNAPSHOT_DATA);
                     }
                 });
+            }
+
+            // Khởi tạo trạng thái nút tiền tệ
+            const updateCurrencyUI = () => {
+                document.querySelectorAll('#currency-switch-btn .currency-option').forEach(el => {
+                    el.classList.toggle('active', el.getAttribute('data-currency') === CURRENT_CURRENCY);
+                });
+            };
+            updateCurrencyUI();
+
+            const currencySwitchBtn = document.getElementById('currency-switch-btn');
+            if (currencySwitchBtn) {
+                currencySwitchBtn.addEventListener('click', () => {
+                    CURRENT_CURRENCY = CURRENT_CURRENCY === 'USD' ? 'VND' : 'USD';
+                    localStorage.setItem('dashboardCurrency', CURRENT_CURRENCY);
+                    updateCurrencyUI();
+                    if (CURRENT_SNAPSHOT_DATA) {
+                        updateDashboardAndSelector(CURRENT_SNAPSHOT_DATA, LAST_SNAPSHOT_DATA);
+                    }
+                });
+            }
+
+            // Khởi tạo trạng thái bộ lọc Online / Offline / Gồng lỗ
+            const updateStatusFilterUI = () => {
+                document.querySelectorAll('.filter-status-group .filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-filter') === CURRENT_STATUS_FILTER);
+                });
+            };
+            updateStatusFilterUI();
+
+            document.querySelectorAll('.filter-status-group .filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    CURRENT_STATUS_FILTER = btn.getAttribute('data-filter');
+                    localStorage.setItem('dashboardStatusFilter', CURRENT_STATUS_FILTER);
+                    updateStatusFilterUI();
+                    if (CURRENT_SNAPSHOT_DATA) {
+                        updateDashboardAndSelector(CURRENT_SNAPSHOT_DATA, LAST_SNAPSHOT_DATA);
+                    }
+                });
+            });
+
+            // Đăng ký Service Worker cho PWA (App điện thoại)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
             }
 
             // Nút làm mới thủ công

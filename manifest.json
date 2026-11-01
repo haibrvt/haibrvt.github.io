@@ -1,0 +1,17 @@
+{
+  "name": "Forex BOT Dashboard",
+  "short_name": "MT5 Dashboard",
+  "description": "Dashboard giám sát tài khoản MT5 Forex Realtime",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#007bff",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
