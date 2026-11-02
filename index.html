@@ -27,6 +27,11 @@
             padding: 20px; 
             background-color: transparent !important;
             transition: color 0.3s; 
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+        *, *:before, *:after {
+            box-sizing: border-box;
         }
         .container { max-width: 95%; margin: auto; }
         .header { 
@@ -370,11 +375,11 @@
 
         /* --- TỐI ƯU GIAO DIỆN MOBILE (< 768px) --- */
         @media (max-width: 768px) {
-            body { padding: 6px 5px !important; }
-            .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
-            .header { padding: 8px !important; margin-bottom: 8px !important; border-radius: 6px !important; }
-            .header h1 { font-size: 17px !important; margin-bottom: 2px !important; }
-            .header h3 { font-size: 11px !important; margin: 3px 0 !important; }
+            body { padding: 4px 4px !important; }
+            .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            .header { padding: 8px !important; margin-bottom: 6px !important; border-radius: 6px !important; }
+            .header h1 { font-size: 16px !important; margin-bottom: 2px !important; }
+            .header h3 { font-size: 11px !important; margin: 2px 0 !important; }
             .header p { font-size: 10px !important; margin: 2px 0 !important; }
 
             .hide-mobile { display: none !important; }
@@ -386,76 +391,99 @@
             /* Khung cố định khi cuộn */
             .sticky-header-wrapper {
                 top: 2px !important;
-                margin-bottom: 8px !important;
+                margin-bottom: 6px !important;
                 border-radius: 8px !important;
+                width: 100% !important;
             }
             .sticky-header-wrapper.is-scrolled {
-                padding: 5px 6px !important;
+                padding: 4px 4px !important;
                 border-radius: 8px !important;
             }
 
-            /* Thanh controls trên 1 dòng duy nhất, co giãn tự động */
+            /* Thanh controls: Cho phép ngắt dòng gọn gàng, không bị tràn màn hình */
             .controls { 
                 flex-direction: row !important; 
-                flex-wrap: nowrap !important;
+                flex-wrap: wrap !important;
                 align-items: center !important; 
-                justify-content: space-between !important;
-                gap: 5px !important;
-                padding: 5px 6px !important;
+                justify-content: flex-start !important;
+                gap: 4px !important;
+                padding: 4px 6px !important;
                 margin-bottom: 4px !important;
             }
             .control-group-select {
-                flex-shrink: 1 !important;
-                min-width: 0 !important;
+                flex: 1 1 auto !important;
+                min-width: 90px !important;
+                max-width: 140px !important;
             }
             .controls select {
-                padding: 5px 4px !important;
+                padding: 4px 4px !important;
                 font-size: 11px !important;
-                max-width: 100px !important;
                 width: 100% !important;
+                height: 28px !important;
             }
             .search-box {
                 flex: 1 1 auto !important;
-                min-width: 55px !important;
+                min-width: 90px !important;
             }
             .search-box input {
                 width: 100% !important;
-                min-width: 55px !important;
-                padding: 5px 18px 5px 5px !important;
+                padding: 4px 18px 4px 6px !important;
                 font-size: 11px !important;
+                height: 28px !important;
             }
-            .search-box input:focus {
-                width: 100% !important;
+            .filter-status-group {
+                padding: 1px !important;
+                gap: 1px !important;
+            }
+            .filter-btn {
+                padding: 3px 5px !important;
+                font-size: 10px !important;
+                height: 24px !important;
+            }
+            .currency-switch {
+                padding: 1px !important;
+                font-size: 10px !important;
+            }
+            .currency-option {
+                padding: 2px 5px !important;
             }
             .refresh-group {
-                gap: 3px !important;
-                flex-shrink: 0 !important;
+                gap: 2px !important;
+                margin-left: auto !important;
             }
             .btn-refresh {
-                padding: 5px 6px !important;
+                padding: 4px 6px !important;
                 font-size: 11px !important;
+                height: 26px !important;
             }
             .refresh-countdown {
                 font-size: 10px !important;
-                min-width: 20px !important;
+                min-width: 18px !important;
+            }
+            .btn-toggle-stats {
+                padding: 4px 6px !important;
+                font-size: 11px !important;
+                height: 26px !important;
             }
 
-            /* Card tổng quan chuyển thành hàng ngang ô mini */
+            /* Card tổng quan chuyển thành cuộn ngang hoặc lưới 2-3 cột nhỏ gọn không tràn */
             #total-summary-card {
-                grid-template-columns: repeat(5, 1fr) !important;
+                grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
                 gap: 3px !important;
                 margin-bottom: 0 !important;
+                width: 100% !important;
             }
             #total-summary-card.stats-collapsed {
                 display: none !important;
             }
             .sticky-header-wrapper .card {
                 min-height: auto !important;
-                padding: 4px 2px !important;
+                padding: 3px 2px !important;
                 border-radius: 4px !important;
+                overflow: hidden !important;
             }
             .sticky-header-wrapper .card h2 {
-                font-size: 9px !important;
+                font-size: 8px !important;
                 margin-bottom: 1px !important;
                 white-space: nowrap !important;
                 overflow: hidden !important;
@@ -463,40 +491,61 @@
                 letter-spacing: 0 !important;
             }
             .sticky-header-wrapper .card p {
-                font-size: 11px !important;
+                font-size: 10px !important;
                 line-height: 1.1 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
             }
             .sticky-header-wrapper #active-accounts-indicator {
                 font-size: 8px !important;
                 margin-top: 1px !important;
+                white-space: nowrap !important;
             }
             .sticky-header-wrapper .change-indicator {
                 font-size: 8px !important;
                 margin-top: 1px !important;
                 line-height: 1 !important;
+                white-space: nowrap !important;
             }
             .sticky-header-wrapper .arrow {
-                font-size: 9px !important;
+                font-size: 8px !important;
             }
 
             /* Thu nhỏ các bảng dữ liệu bên dưới */
-            .group-summary { padding: 8px 6px !important; margin-bottom: 15px !important; }
-            .group-summary-header h2 { font-size: 14px !important; margin-bottom: 6px !important; }
+            .group-summary { padding: 6px 4px !important; margin-bottom: 12px !important; width: 100% !important; overflow: hidden !important; }
+            .group-summary-header h2 { font-size: 13px !important; margin-bottom: 6px !important; }
             .group-summary .card-container {
                 grid-template-columns: repeat(2, 1fr) !important;
-                gap: 5px !important;
+                gap: 4px !important;
             }
             .group-summary .card {
-                min-height: 60px !important;
-                padding: 6px 4px !important;
+                min-height: 50px !important;
+                padding: 4px 4px !important;
             }
-            .group-summary .card p { font-size: 14px !important; }
-            .group-table th, .group-table td { padding: 6px 6px !important; font-size: 11px !important; }
+            .group-summary .card h2 { font-size: 11px !important; }
+            .group-summary .card p { font-size: 13px !important; }
+            .table-responsive {
+                width: 100% !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                margin-top: 10px !important;
+            }
+            .group-table {
+                min-width: 620px !important; /* Cho phép cuộn ngang bảng thay vì làm vỡ cả trang */
+            }
+            .group-table th, .group-table td { padding: 5px 6px !important; font-size: 11px !important; }
 
-            /* Nút cuộn lên đầu trang thu nhỏ trên mobile */
+            /* Nút menu bên trái và nút cuộn trên mobile */
+            .group-nav {
+                left: 15px !important;
+                bottom: 20px !important;
+                width: 42px !important;
+                height: 42px !important;
+            }
             #scrollToTopBtn {
                 bottom: 20px !important;
-                right: 20px !important;
+                right: 15px !important;
                 width: 38px !important;
                 height: 38px !important;
                 font-size: 18px !important;
