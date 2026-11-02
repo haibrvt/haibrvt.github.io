@@ -1,32 +1,19 @@
-const CACHE_NAME = 'mt5-dashboard-v1';
-const ASSETS = [
-  './',
-  './index.html',
-  './favicon.png',
-  './manifest.json'
-];
-
+// Service Worker tự dọn dẹp cache và luôn lấy code mới nhất từ mạng
 self.addEventListener('install', (e) => {
   self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
 });
 
 self.addEventListener('activate', (e) => {
+  // Xóa toàn bộ cache cũ lưu trên máy
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)))
-    ).then(() => self.clients.claim())
+    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (e) => {
-  // Bỏ qua các API Google Sheet, chỉ cache tài nguyên tĩnh
-  if (e.request.url.includes('google.com') || e.request.url.includes('gviz')) {
-    return;
-  }
+  // Network-first: Luôn tải mới từ máy chủ GitHub, không lưu cache đè lên file HTML
   e.respondWith(
-    caches.match(e.request).then((res) => res || fetch(e.request))
+    fetch(e.request).catch(() => caches.match(e.request))
   );
 });
