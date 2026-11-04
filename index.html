@@ -1101,8 +1101,10 @@
         let CURRENT_EXCHANGE_RATE = 25400; // Tỷ giá mặc định nếu chưa load xong
         let CURRENT_CURRENCY = localStorage.getItem('dashboardCurrency') || 'USD';
         let CURRENT_STATUS_FILTER = localStorage.getItem('dashboardStatusFilter') || 'all';
-        let TABLE_SORT_COLUMN = localStorage.getItem('dashboardSortCol') || null;
-        let TABLE_SORT_DIRECTION = localStorage.getItem('dashboardSortDir') || 'desc'; 
+        let TABLE_SORT_COLUMN = null; // Khi tải lại trang sẽ về lại vị trí mặc định ban đầu
+        let TABLE_SORT_DIRECTION = 'desc'; 
+        localStorage.removeItem('dashboardSortCol');
+        localStorage.removeItem('dashboardSortDir'); 
         
         const fetchSheetData = async (url) => {
             const response = await fetch(url);
@@ -1961,8 +1963,6 @@
                                 TABLE_SORT_COLUMN = col;
                                 TABLE_SORT_DIRECTION = 'desc';
                             }
-                            localStorage.setItem('dashboardSortCol', TABLE_SORT_COLUMN);
-                            localStorage.setItem('dashboardSortDir', TABLE_SORT_DIRECTION);
                             if (CURRENT_SNAPSHOT_DATA) {
                                 updateDashboardAndSelector(CURRENT_SNAPSHOT_DATA, LAST_SNAPSHOT_DATA);
                             }
