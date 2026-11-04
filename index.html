@@ -1465,11 +1465,11 @@
                             String(acc.name).toLowerCase().includes(SEARCH_KEYWORD);
                         if (!matchText) return false;
 
-                        // Khớp bộ lọc trạng thái
+                        // Khớp bộ lọc trạng thái (Online/Offline chỉ lấy tài khoản có Equity > 0)
                         if (CURRENT_STATUS_FILTER === 'online') {
-                            return isAccountOnline(acc.last_update_time);
+                            return isAccountOnline(acc.last_update_time) && (Number(acc.equity) || 0) > 0;
                         } else if (CURRENT_STATUS_FILTER === 'offline') {
-                            return !isAccountOnline(acc.last_update_time);
+                            return !isAccountOnline(acc.last_update_time) && (Number(acc.equity) || 0) > 0;
                         } else if (CURRENT_STATUS_FILTER === 'drawdown') {
                             const ddPercent = acc.balance > 0 ? (acc.max_drawdown / acc.balance) * 100 : 0;
                             return acc.max_drawdown > 150 || ddPercent > 20 || (acc.equity - acc.balance < -50);
