@@ -3,6 +3,8 @@
   "short_name": "MT5 Dashboard",
   "description": "Dashboard giám sát tài khoản MT5 Forex Realtime",
   "start_url": "./index.html",
+  "scope": "./",
+  "id": "./",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#007bff",
